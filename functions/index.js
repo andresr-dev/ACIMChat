@@ -3,9 +3,6 @@ const { defineSecret } = require("firebase-functions/params");
 const { OpenAI } = require("openai");
 const { Pinecone } = require("@pinecone-database/pinecone");
 
-// ─────────────────────────────────────────────
-// SECRETS — stored securely in Firebase, never in code
-// ─────────────────────────────────────────────
 const OPENAI_API_KEY_SECRET   = defineSecret("OPENAI_API_KEY");
 const PINECONE_API_KEY_SECRET = defineSecret("PINECONE_API_KEY");
 const PINECONE_INDEX   = "acim-index";
