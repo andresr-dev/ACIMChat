@@ -12,10 +12,12 @@
 		4197C59D2F610A340020CE35 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 4197C59C2F610A340020CE35 /* FirebaseFirestore */; };
 		4197C59F2F610A340020CE35 /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = 4197C59E2F610A340020CE35 /* FirebaseFunctions */; };
 		4197C5A22F610B110020CE35 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4197C5A12F610B110020CE35 /* FirebaseCore */; };
+		4197C5A92F631DAF0020CE35 /* ChatUI in Frameworks */ = {isa = PBXBuildFile; productRef = 4197C5A82F631DAF0020CE35 /* ChatUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		4197C4682F5FB33C0020CE35 /* ACIMChat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ACIMChat.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4197C5A72F631D720020CE35 /* ChatUI */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = ChatUI; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -35,6 +37,7 @@
 				4197C5A22F610B110020CE35 /* FirebaseCore in Frameworks */,
 				4197C59B2F610A340020CE35 /* FirebaseAuth in Frameworks */,
 				4197C59D2F610A340020CE35 /* FirebaseFirestore in Frameworks */,
+				4197C5A92F631DAF0020CE35 /* ChatUI in Frameworks */,
 				4197C59F2F610A340020CE35 /* FirebaseFunctions in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -48,6 +51,7 @@
 				4197C46A2F5FB33C0020CE35 /* ACIMChat */,
 				4197C5A02F610B110020CE35 /* Frameworks */,
 				4197C4692F5FB33C0020CE35 /* Products */,
+				4197C5A72F631D720020CE35 /* ChatUI */,
 			);
 			sourceTree = "<group>";
 		};
@@ -91,6 +95,7 @@
 				4197C59C2F610A340020CE35 /* FirebaseFirestore */,
 				4197C59E2F610A340020CE35 /* FirebaseFunctions */,
 				4197C5A12F610B110020CE35 /* FirebaseCore */,
+				4197C5A82F631DAF0020CE35 /* ChatUI */,
 			);
 			productName = ACIMChat;
 			productReference = 4197C4682F5FB33C0020CE35 /* ACIMChat.app */;
@@ -215,6 +220,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
 			};
 			name = Debug;
 		};
@@ -271,6 +277,7 @@
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -303,7 +310,7 @@
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -336,7 +343,7 @@
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -400,6 +407,10 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4197C5972F610A340020CE35 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCore;
+		};
+		4197C5A82F631DAF0020CE35 /* ChatUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ChatUI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
