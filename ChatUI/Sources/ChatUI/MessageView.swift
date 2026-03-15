@@ -25,7 +25,6 @@ struct MessageView: View {
         let alignment = message.isAI ? Alignment.leading : .trailing
         
         Text(message.text)
-          .fontWeight(.medium)
           .foregroundStyle(message.isAI ? Color.primary : .white)
           .padding(12)
           .background {
