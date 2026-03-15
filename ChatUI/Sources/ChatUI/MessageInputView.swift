@@ -10,7 +10,7 @@ import SwiftUI
 struct MessageInputView: View {
   @State var text = ""
   @FocusState var focus: Bool
-  
+    
   var body: some View {
     HStack(alignment: .bottom) {
       TextField("Enter Message", text: $text, axis: .vertical)
@@ -20,9 +20,6 @@ struct MessageInputView: View {
         .background {
           RoundedRectangle(cornerRadius: 25)
             .fill(Color(uiColor: .secondarySystemBackground))
-        }
-        .onAppear {
-          focus = true
         }
       
       Button {

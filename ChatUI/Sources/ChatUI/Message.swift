@@ -11,7 +11,7 @@ struct Message: Equatable, Identifiable {
   let id = UUID()
   var text: String
   var isAI: Bool
-  var timestamp: Date = .now
+  var date: Date = .now
 }
 
 extension Message {

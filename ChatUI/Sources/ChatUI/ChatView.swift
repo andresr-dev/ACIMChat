@@ -13,8 +13,8 @@ class ChatModel {
   
   @MainActor
   func getMessages() async {
-    for i in 0..<11 {
-      try? await Task.sleep(for: .seconds(1))
+    for i in 0..<32 {
+      try? await Task.sleep(for: .seconds(2))
       let isAI = !i.isMultiple(of: 2)
       let message = Message(
         text: "This is a message in the chat, this is a message in the chat",
@@ -25,18 +25,32 @@ class ChatModel {
   }
 }
 
-struct ChatView: View {
+public struct ChatView: View {
   @State var model = ChatModel()
+  @State var position = ScrollPosition(idType: Message.ID.self)
   
-  var body: some View {
+  public init() { }
+  
+  public var body: some View {
     VStack(spacing: 0) {
       ScrollView {
         LazyVStack(spacing: 12) {
-          ForEach(model.messages, content: MessageView.init)
+          ForEach(model.messages) { message in
+            MessageView(message: message)
+          }
         }
         .padding([.horizontal])
+        .scrollTargetLayout()
       }
       .defaultScrollAnchor(.bottom)
+      .scrollPosition($position, anchor: .bottom)
+      .onChange(of: model.messages) { _, newValue in
+        if let id = newValue.last?.id {
+          position.scrollTo(id: id, anchor: .bottom)
+        }
+      }
+      .animation(.easeOut, value: model.messages)
+      .animation(.easeOut, value: position)
       .padding(.top, 12)
       
       MessageInputView()
@@ -45,7 +59,6 @@ struct ChatView: View {
         .background()
         .ignoresSafeArea()
     }
-    .animation(.easeOut, value: model.messages)
     .task {
       await model.getMessages()
     }

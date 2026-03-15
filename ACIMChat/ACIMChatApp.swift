@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ChatUI
 
 @main
 struct ACIMChatApp: App {
@@ -13,7 +14,7 @@ struct ACIMChatApp: App {
   
   var body: some Scene {
     WindowGroup {
-      ContentView()
+      ChatView()
     }
   }
 }
