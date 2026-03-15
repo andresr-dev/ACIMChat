@@ -13,7 +13,10 @@ let package = Package(
   ],
   targets: [
     .target(
-      name: "ChatUI"
+      name: "ChatUI",
+      swiftSettings: [
+        .defaultIsolation(MainActor.self)
+      ]
     ),
   ]
 )

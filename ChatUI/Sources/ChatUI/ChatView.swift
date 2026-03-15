@@ -7,25 +7,51 @@
 
 import SwiftUI
 
+@Observable
+class ChatModel {
+  var messages = [Message]()
+  
+  @MainActor
+  func getMessages() async {
+    for i in 0..<11 {
+      try? await Task.sleep(for: .seconds(1))
+      let isAI = !i.isMultiple(of: 2)
+      let message = Message(
+        text: "This is a message in the chat, this is a message in the chat",
+        isAI: isAI
+      )
+      messages.append(message)
+    }
+  }
+}
+
 struct ChatView: View {
-  let messages: [Message]
-  @State var text: String = ""
+  @State var model = ChatModel()
   
   var body: some View {
-    VStack(spacing: 16) {
+    VStack(spacing: 0) {
       ScrollView {
         LazyVStack(spacing: 12) {
-          ForEach(messages, content: MessageView.init)
+          ForEach(model.messages, content: MessageView.init)
         }
+        .padding([.horizontal])
       }
       .defaultScrollAnchor(.bottom)
+      .padding(.top, 12)
       
-      MessageInputView(text: $text)
+      MessageInputView()
+        .padding([.horizontal, .bottom])
+        .padding(.top, 12)
+        .background()
+        .ignoresSafeArea()
     }
-    .padding()
+    .animation(.easeOut, value: model.messages)
+    .task {
+      await model.getMessages()
+    }
   }
 }
 
 #Preview {
-  ChatView(messages: Message.mock)
+  ChatView()
 }

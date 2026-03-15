@@ -10,8 +10,8 @@ struct MessageView: View {
         Image(.holySpirit)
           .resizable()
           .scaledToFit()
-          .frame(width: 54, height: 54)
-          .frame(width: 44, height: 44)
+          .frame(width: 52, height: 52)
+          .frame(width: 42, height: 42)
           .clipShape(Circle())
       }
       
