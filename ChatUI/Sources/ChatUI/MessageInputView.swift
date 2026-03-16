@@ -30,8 +30,8 @@ struct MessageInputView: View {
           .scaledToFit()
           .foregroundStyle(.white)
           .fontWeight(.bold)
-          .frame(height: 18)
-          .frame(width: 42, height: 32)
+          .frame(height: 17)
+          .frame(width: 40, height: 28)
           .background {
             Capsule()
               .fill(.blue)
