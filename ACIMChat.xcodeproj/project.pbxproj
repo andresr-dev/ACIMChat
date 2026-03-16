@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		417644882F68A63D008B01B2 /* Chat in Frameworks */ = {isa = PBXBuildFile; productRef = 417644872F68A63D008B01B2 /* Chat */; };
 		4197C5992F610A340020CE35 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 4197C5982F610A340020CE35 /* FirebaseAnalytics */; };
 		4197C59B2F610A340020CE35 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 4197C59A2F610A340020CE35 /* FirebaseAuth */; };
 		4197C59D2F610A340020CE35 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 4197C59C2F610A340020CE35 /* FirebaseFirestore */; };
@@ -16,6 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		417644862F68A34C008B01B2 /* Chat */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Chat; sourceTree = "<group>"; };
 		4197C4682F5FB33C0020CE35 /* ACIMChat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ACIMChat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4197C5A72F631D720020CE35 /* ChatUI */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = ChatUI; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -38,6 +40,7 @@
 				4197C59B2F610A340020CE35 /* FirebaseAuth in Frameworks */,
 				4197C59D2F610A340020CE35 /* FirebaseFirestore in Frameworks */,
 				4197C5A92F631DAF0020CE35 /* ChatUI in Frameworks */,
+				417644882F68A63D008B01B2 /* Chat in Frameworks */,
 				4197C59F2F610A340020CE35 /* FirebaseFunctions in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -52,6 +55,7 @@
 				4197C5A02F610B110020CE35 /* Frameworks */,
 				4197C4692F5FB33C0020CE35 /* Products */,
 				4197C5A72F631D720020CE35 /* ChatUI */,
+				417644862F68A34C008B01B2 /* Chat */,
 			);
 			sourceTree = "<group>";
 		};
@@ -96,6 +100,7 @@
 				4197C59E2F610A340020CE35 /* FirebaseFunctions */,
 				4197C5A12F610B110020CE35 /* FirebaseCore */,
 				4197C5A82F631DAF0020CE35 /* ChatUI */,
+				417644872F68A63D008B01B2 /* Chat */,
 			);
 			productName = ACIMChat;
 			productReference = 4197C4682F5FB33C0020CE35 /* ACIMChat.app */;
@@ -385,6 +390,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		417644872F68A63D008B01B2 /* Chat */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Chat;
+		};
 		4197C5982F610A340020CE35 /* FirebaseAnalytics */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4197C5972F610A340020CE35 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
