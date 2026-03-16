@@ -18,5 +18,6 @@ let package = Package(
         .defaultIsolation(MainActor.self)
       ]
     ),
-  ]
+  ],
+  swiftLanguageModes: [.v6]
 )

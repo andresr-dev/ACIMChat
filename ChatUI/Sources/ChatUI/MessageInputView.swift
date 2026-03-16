@@ -15,8 +15,8 @@ struct MessageInputView: View {
     HStack(alignment: .bottom) {
       TextField("Enter Message", text: $text, axis: .vertical)
         .focused($focus)
-        .padding(14)
         .multilineTextAlignment(.leading)
+        .padding(10)
         .background {
           RoundedRectangle(cornerRadius: 25)
             .fill(Color(uiColor: .secondarySystemBackground))
@@ -42,6 +42,6 @@ struct MessageInputView: View {
 }
 
 #Preview {
-  MessageInputView(text: "skdfjsldkfjsldkfj lsdkfjsldkfjsdl dkfdkdkdkdkkdkdkdkdkd dkdkdkdkdkd dkdkdkdkdkd kdkdkdkdkdkd dkdkdkdkdkdkdkd")
+  MessageInputView(text: "Mkdfjsldkfjsldkfj lsdkfjsldkfjsdl")
     .padding()
 }
