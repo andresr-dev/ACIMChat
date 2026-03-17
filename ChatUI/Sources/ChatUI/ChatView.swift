@@ -39,6 +39,7 @@ public struct ChatView: View {
       }
       .defaultScrollAnchor(.bottom)
       .scrollPosition($position, anchor: .bottom)
+      .scrollDismissesKeyboard(.interactively)
       .onChange(of: store.messages) { _, newValue in
         if let id = newValue.last?.id {
           position.scrollTo(id: id, anchor: .bottom)

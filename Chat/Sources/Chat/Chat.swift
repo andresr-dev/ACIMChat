@@ -5,11 +5,14 @@ import ComposableArchitecture
 public struct Chat {
   @ObservableState
   public struct State {
-    public var messages = [Message]()
-    public var text = ""
+    public var messages: [Message]
+    public var text: String
     public var isTyping = false
     
-    public init() { }
+    public init(messages: [Message] = [], text: String = "") {
+      self.messages = messages
+      self.text = text
+    }
   }
   
   public enum Action: BindableAction {

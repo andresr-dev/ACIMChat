@@ -15,7 +15,6 @@ struct ACIMChatApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
   let store = Store(initialState: Chat.State()) {
     Chat()
-      ._printChanges()
   }
   
   var body: some Scene {

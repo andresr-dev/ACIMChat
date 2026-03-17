@@ -2,8 +2,5 @@
   "info" : {
     "author" : "xcode",
     "version" : 1
-  },
-  "properties" : {
-    "generates-swift-asset-symbol-extensions" : true
   }
 }

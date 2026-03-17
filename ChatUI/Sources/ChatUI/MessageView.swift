@@ -28,10 +28,8 @@ struct MessageView: View {
         Text(message.text)
           .foregroundStyle(message.role == .ai ? Color.primary : .white)
           .padding(12)
-          .background {
-            RoundedRectangle(cornerRadius: 10)
-              .fill(message.role == .ai ? Color(uiColor: .secondarySystemBackground) : .blue)
-          }
+          .background(message.role == .ai ? Color(.secondarySystemBackground) : Color(.accent))
+          .clipShape(.rect(cornerRadius: 12))
           .containerRelativeFrame([.horizontal], alignment: alignment) { length, axis in
             length * 0.7
           }
