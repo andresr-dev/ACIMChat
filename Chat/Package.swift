@@ -4,7 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "Chat",
-    platforms: [.macOS(.v26)],
+    platforms: [.macOS(.v26), .iOS(.v26)],
     products: [
         .library(
             name: "Chat",
@@ -21,7 +21,7 @@ let package = Package(
               .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
             ],
             swiftSettings: [
-              .defaultIsolation(MainActor.self)
+              // .defaultIsolation(MainActor.self)
             ]
         ),
         .testTarget(

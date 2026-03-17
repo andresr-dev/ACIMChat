@@ -1,4 +1,5 @@
 
+import Chat
 import SwiftUI
 
 struct MessageView: View {
@@ -6,14 +7,14 @@ struct MessageView: View {
   
   var body: some View {
     VStack {
-      if !message.isAI {
+      if message.role == .user {
         Text(message.date.formatted(date: .abbreviated, time: .shortened))
           .font(.caption)
           .foregroundStyle(.secondary)
       }
       
       HStack(alignment: .bottom) {
-        if message.isAI {
+        if message.role == .ai {
           Image(.holySpirit)
             .resizable()
             .scaledToFit()
@@ -22,14 +23,14 @@ struct MessageView: View {
             .clipShape(Circle())
         }
         
-        let alignment = message.isAI ? Alignment.leading : .trailing
+        let alignment = message.role == .ai ? Alignment.leading : .trailing
         
         Text(message.text)
-          .foregroundStyle(message.isAI ? Color.primary : .white)
+          .foregroundStyle(message.role == .ai ? Color.primary : .white)
           .padding(12)
           .background {
             RoundedRectangle(cornerRadius: 10)
-              .fill(message.isAI ? Color(uiColor: .secondarySystemBackground) : .blue)
+              .fill(message.role == .ai ? Color(uiColor: .secondarySystemBackground) : .blue)
           }
           .containerRelativeFrame([.horizontal], alignment: alignment) { length, axis in
             length * 0.7

@@ -6,15 +6,21 @@
 //
 
 import SwiftUI
+import Chat
 import ChatUI
+import ComposableArchitecture
 
 @main
 struct ACIMChatApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+  let store = Store(initialState: ChatFeature.State()) {
+    ChatFeature()
+      ._printChanges()
+  }
   
   var body: some Scene {
     WindowGroup {
-      ChatView()
+      ChatView(store: store)
     }
   }
 }

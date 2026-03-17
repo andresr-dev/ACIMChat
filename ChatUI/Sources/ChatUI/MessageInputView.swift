@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct MessageInputView: View {
-  @State var text = ""
-  @FocusState var focus: Bool
+  @Binding var text: String
+//  @FocusState var focus: Bool
     
   var body: some View {
     HStack(alignment: .bottom) {
       TextField("Enter Message", text: $text, axis: .vertical)
-        .focused($focus)
+//        .focused($focus)
         .multilineTextAlignment(.leading)
         .padding(10)
         .background {
@@ -42,6 +42,6 @@ struct MessageInputView: View {
 }
 
 #Preview {
-  MessageInputView(text: "Mkdfjsldkfjsldkfj lsdkfjsldkfjsdl")
+  MessageInputView(text: .constant("Mkdfjsldkfjsldkfj lsdkfjsldkfjsdl"))
     .padding()
 }
