@@ -11,11 +11,12 @@ import SwiftUI
 
 struct MessageInputView: View {
   @Bindable var store: StoreOf<Chat>
+  @FocusState var focus: Bool
     
   var body: some View {
     HStack(alignment: .bottom) {
       TextField("Enter Message", text: $store.text, axis: .vertical)
-//        .focused($focus)
+        .focused($focus)
         .multilineTextAlignment(.leading)
         .padding(10)
         .background {
@@ -37,6 +38,11 @@ struct MessageInputView: View {
             Capsule()
               .fill(.blue)
           }
+      }
+    }
+    .onAppear {
+      if store.messages.isEmpty {
+        focus = true
       }
     }
   }
