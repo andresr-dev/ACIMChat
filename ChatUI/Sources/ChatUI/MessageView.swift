@@ -43,5 +43,5 @@ struct MessageView: View {
 }
 
 #Preview {
-  MessageView(message: .mock[1])
+  MessageView(message: .mock[0])
 }

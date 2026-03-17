@@ -13,8 +13,8 @@ import ComposableArchitecture
 @main
 struct ACIMChatApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-  let store = Store(initialState: ChatFeature.State()) {
-    ChatFeature()
+  let store = Store(initialState: Chat.State()) {
+    Chat()
       ._printChanges()
   }
   

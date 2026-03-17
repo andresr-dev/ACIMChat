@@ -10,10 +10,10 @@ import ComposableArchitecture
 import SwiftUI
 
 public struct ChatView: View {
-  @Bindable var store: StoreOf<ChatFeature>
+  @Bindable var store: StoreOf<Chat>
   @State var position = ScrollPosition(idType: Message.ID.self)
   
-  public init(store: StoreOf<ChatFeature>) {
+  public init(store: StoreOf<Chat>) {
     self.store = store
   }
   
@@ -21,8 +21,17 @@ public struct ChatView: View {
     VStack(spacing: 0) {
       ScrollView {
         LazyVStack(spacing: 12) {
-          ForEach(store.messages) { message in
-            MessageView(message: message)
+          ForEach(store.messages, content: MessageView.init)
+          
+          if store.state.isTyping {
+            TypingIndicator()
+              .frame(maxWidth: .infinity, alignment: .leading)
+              .transition(
+                .asymmetric(
+                  insertion: .opacity,
+                  removal: .identity
+                )
+              )
           }
         }
         .padding([.horizontal])
@@ -37,9 +46,10 @@ public struct ChatView: View {
       }
       .animation(.easeOut, value: store.messages)
       .animation(.easeOut, value: position)
+      .animation(.default, value: store.isTyping)
       .padding(.top, 12)
       
-      MessageInputView(text: $store.text)
+      MessageInputView(store: store)
         .padding([.horizontal, .bottom])
         .padding(.top, 12)
         .background()
@@ -50,9 +60,8 @@ public struct ChatView: View {
 
 #Preview {
   ChatView(
-    store: Store(initialState: ChatFeature.State()) {
-      ChatFeature()
-        ._printChanges()
+    store: Store(initialState: Chat.State()) {
+      Chat()
     }
   )
 }

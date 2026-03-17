@@ -9,7 +9,7 @@ import ComposableArchitecture
 import Foundation
 
 @DependencyClient
-struct AIClient: Sendable {
+struct AIClient {
   var sendMessage: @Sendable (String) async throws -> Message
 }
 
@@ -36,13 +36,13 @@ extension AIClient {
     let role: String
     let content: String
   }
-  
-  enum Error: Swift.Error {
-    case invalidURL
-    case invalidResponse
-    case serverError(Int)
-    case decodingError(Swift.Error)
-  }
+}
+
+public enum AIClientError: Error {
+  case invalidURL
+  case invalidResponse
+  case serverError(Int)
+  case decodingError(Error)
 }
 
 extension AIClient: DependencyKey {
@@ -50,7 +50,7 @@ extension AIClient: DependencyKey {
     sendMessage: { question in
       let url = URL(string: "https://us-central1-acim-chat.cloudfunctions.net/askACIM")
       guard let url else {
-        throw Error.invalidURL
+        throw AIClientError.invalidURL
       }
       var request = URLRequest(url: url)
       request.httpMethod = "POST"
@@ -65,19 +65,24 @@ extension AIClient: DependencyKey {
       let (data, response) = try await URLSession.shared.data(for: request)
       
       guard let httpResponse = response as? HTTPURLResponse else {
-        throw Error.invalidResponse
+        throw AIClientError.invalidResponse
       }
       guard (200...299).contains(httpResponse.statusCode) else {
-        throw Error.serverError(httpResponse.statusCode)
+        throw AIClientError.serverError(httpResponse.statusCode)
       }
       let decoder = JSONDecoder()
       decoder.keyDecodingStrategy = .convertFromSnakeCase
       do {
         let response = try decoder.decode(Response.self, from: data)
-        return await Message(text: response.answer, role: .ai)
+        return Message(text: response.answer, role: .ai)
       } catch {
-        throw Error.decodingError(error)
+        throw AIClientError.decodingError(error)
       }
     }
   )
+  
+  static let previewValue = AIClient { question in
+    try await Task.sleep(for: .seconds(2))
+    return Message(text: "I don't know, try asking me something else.", role: .ai)
+  }
 }

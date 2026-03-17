@@ -5,15 +5,16 @@
 //  Created by Andres Raigoza on 14/03/26.
 //
 
+import Chat
+import ComposableArchitecture
 import SwiftUI
 
 struct MessageInputView: View {
-  @Binding var text: String
-//  @FocusState var focus: Bool
+  @Bindable var store: StoreOf<Chat>
     
   var body: some View {
     HStack(alignment: .bottom) {
-      TextField("Enter Message", text: $text, axis: .vertical)
+      TextField("Enter Message", text: $store.text, axis: .vertical)
 //        .focused($focus)
         .multilineTextAlignment(.leading)
         .padding(10)
@@ -23,7 +24,7 @@ struct MessageInputView: View {
         }
       
       Button {
-        
+        store.send(.sendMessageButtonPressed)
       } label: {
         Image(systemName: "arrow.up")
           .resizable()
@@ -42,6 +43,9 @@ struct MessageInputView: View {
 }
 
 #Preview {
-  MessageInputView(text: .constant("Mkdfjsldkfjsldkfj lsdkfjsldkfjsdl"))
-    .padding()
+  MessageInputView(
+    store: Store(initialState: Chat.State()) {
+      Chat()
+    }
+  )
 }

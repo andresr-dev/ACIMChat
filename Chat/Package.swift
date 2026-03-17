@@ -19,9 +19,6 @@ let package = Package(
             name: "Chat",
             dependencies: [
               .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
-            ],
-            swiftSettings: [
-              // .defaultIsolation(MainActor.self)
             ]
         ),
         .testTarget(
