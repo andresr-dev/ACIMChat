@@ -75,7 +75,6 @@ struct ChatTests {
 }
 
 // MARK: - Helpers
-
 extension ChatTests {
   private func getStore(messages: [Message] = [], text: String = "") -> TestStore<Chat.State, Chat.Action> {
     TestStore(
