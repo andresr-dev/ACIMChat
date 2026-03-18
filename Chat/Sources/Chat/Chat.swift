@@ -38,6 +38,7 @@ public struct Chat {
       switch action {
       case .onAppear:
         state.focusedField = state.messages.isEmpty
+        state.isShowingSendButton = !state.text.isEmpty
         return .none
         
       case let .textChanged(text):

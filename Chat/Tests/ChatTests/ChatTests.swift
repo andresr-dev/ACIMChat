@@ -55,13 +55,35 @@ struct ChatTests {
       $0.focusedField = true
     }
   }
+  
+  @Test
+  func fieldIsNotFocusedWhenViewAppearsWithChatNotEmpty() async throws {
+    let store = getStore(messages: Message.mock)
+    
+    await store.send(\.onAppear)
+  }
+  
+  @Test
+  func sendButtonIsVisibleWhenViewAppearsWithTextFieldPopulated() async throws {
+    let store = getStore(text: "Hello")
+    
+    await store.send(\.onAppear) {
+      $0.focusedField = true
+      $0.isShowingSendButton = true
+    }
+  }
 }
 
 // MARK: - Helpers
 
 extension ChatTests {
-  private func getStore() -> TestStore<Chat.State, Chat.Action> {
-    TestStore(initialState: Chat.State()) {
+  private func getStore(messages: [Message] = [], text: String = "") -> TestStore<Chat.State, Chat.Action> {
+    TestStore(
+      initialState: Chat.State(
+        messages: messages,
+        text: text
+      )
+    ) {
       Chat()
     } withDependencies: {
       $0.uuid = .incrementing

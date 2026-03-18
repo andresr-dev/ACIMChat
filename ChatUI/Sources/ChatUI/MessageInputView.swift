@@ -27,13 +27,12 @@ struct MessageInputView: View {
             Image(systemName: "arrow.up")
               .resizable()
               .scaledToFit()
+              .font(.system(size: 17, weight: .bold))
               .foregroundStyle(.white)
-              .fontWeight(.bold)
-              .frame(height: 17)
               .frame(width: buttonWidth, height: buttonHeight)
               .background(Color(.accent))
               .clipShape(.capsule)
-              .padding(.bottom, 6)
+              .padding(.bottom, 7)
               .padding(.trailing, 8)
           }
         }
@@ -58,7 +57,7 @@ struct MessageInputView: View {
 #Preview {
   MessageInputView(
     store: Store(
-      initialState: Chat.State(text: "")
+      initialState: Chat.State(text: "dfdf")
     ) {
       Chat()
     }
