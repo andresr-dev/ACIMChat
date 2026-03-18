@@ -14,37 +14,35 @@ struct MessageInputView: View {
   @FocusState var focusedField: Bool
   let buttonWidth = 40.0
   let buttonHeight = 30.0
+  let textFieldPadding = 9.0
     
   var body: some View {
     ZStack(alignment: .bottom) {
-      HStack {
-        Spacer()
-        
-        if store.state.isShowingSendButton {
-          Button {
-            store.send(.sendMessageButtonPressed)
-          } label: {
-            Image(systemName: "arrow.up")
-              .font(.system(size: 18, weight: .bold))
-              .foregroundStyle(.white)
-              .frame(width: buttonWidth, height: buttonHeight)
-              .background(Color(.accent))
-              .clipShape(.capsule)
-              .padding(.bottom, 7)
-              .padding(.trailing, 8)
-          }
+      if store.state.isShowingSendButton {
+        Button {
+          store.send(.sendMessageButtonPressed)
+        } label: {
+          Image(systemName: "arrow.up")
+            .font(.system(size: 18, weight: .bold))
+            .foregroundStyle(.white)
+            .frame(width: buttonWidth, height: buttonHeight)
+            .background(Color(.accent))
+            .clipShape(.capsule)
+            .padding([.vertical, .trailing], textFieldPadding)
         }
+        .frame(maxWidth: .infinity, alignment: .trailing)
       }
       
-      HStack {
+      HStack(spacing: 12) {
         TextField("Enter Message", text: $store.text.sending(\.textChanged), axis: .vertical)
           .focused($focusedField)
           .multilineTextAlignment(.leading)
-          .padding(10)
+          .padding(.leading, 5)
         
         Color.clear
           .frame(width: buttonWidth, height: buttonHeight)
       }
+      .padding(textFieldPadding)
     }
     .glassEffect(.regular, in: .rect(cornerRadius: 24))
     .onAppear { store.send(.onAppear) }
