@@ -4,7 +4,7 @@ import ComposableArchitecture
 @Reducer
 public struct Chat {
   @ObservableState
-  public struct State {
+  public struct State: Equatable {
     public var messages: [Message]
     public var text: String
     public var isTyping = false
@@ -24,6 +24,8 @@ public struct Chat {
   public init() { }
   
   @Dependency(\.aiClient) var aiClient
+  @Dependency(\.uuid) var uuid
+  @Dependency(\.date.now) var now
   
   public var body: some ReducerOf<Self> {
     BindingReducer()
@@ -33,7 +35,7 @@ public struct Chat {
       case .sendMessageButtonPressed:
         let text = state.text
         state.text = ""
-        let message = Message(text: text, role: .user)
+        let message = Message(id: uuid(), text: text, role: .user, date: now)
         state.messages.append(message)
         state.isTyping = true
         

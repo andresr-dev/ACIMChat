@@ -85,4 +85,6 @@ extension AIClient: DependencyKey {
     try await Task.sleep(for: .seconds(2))
     return Message(text: "I don't know, try asking me something else.", role: .ai)
   }
+  
+  static let testValue = AIClient()
 }

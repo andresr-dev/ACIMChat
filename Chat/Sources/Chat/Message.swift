@@ -8,19 +8,21 @@
 import Foundation
 
 public struct Message: Equatable, Identifiable, Sendable {
-  public let id = UUID()
+  public let id: UUID
   public let text: String
   public let role: Role
-  public let date: Date = .now
+  public let date: Date
   
   public enum Role: String, Sendable {
     case user
     case ai = "assistant"
   }
   
-  public init(text: String, role: Role) {
+  public init(id: UUID = UUID(), text: String, role: Role, date: Date = Date()) {
+    self.id = id
     self.text = text
     self.role = role
+    self.date = date
   }
 }
 
