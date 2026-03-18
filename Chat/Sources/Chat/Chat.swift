@@ -9,6 +9,7 @@ public struct Chat {
     public var text: String
     public var isTyping = false
     public var isShowingSendButton = false
+    public var focusedField = false
     
     public init(messages: [Message] = [], text: String = "") {
       self.messages = messages
@@ -16,7 +17,9 @@ public struct Chat {
     }
   }
   
-  public enum Action {
+  public enum Action: BindableAction {
+    case binding(BindingAction<State>)
+    case onAppear
     case textChanged(String)
     case sendMessageButtonPressed
     case aiResponse(Result<Message, Error>)
@@ -29,8 +32,14 @@ public struct Chat {
   @Dependency(\.date.now) var now
   
   public var body: some ReducerOf<Self> {
+    BindingReducer()
+    
     Reduce { state, action in
       switch action {
+      case .onAppear:
+        state.focusedField = state.messages.isEmpty
+        return .none
+        
       case let .textChanged(text):
         state.text = text
         return .none
@@ -59,6 +68,9 @@ public struct Chat {
         case .failure:
           return .none
         }
+        
+      case .binding:
+        return .none
       }
     }
     .onChange(of: \.text) { oldValue, state in

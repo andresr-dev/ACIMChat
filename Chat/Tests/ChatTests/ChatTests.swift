@@ -10,6 +10,7 @@ import Testing
 import ComposableArchitecture
 import Foundation
 
+@MainActor
 struct ChatTests {
   let date = Date(timeIntervalSince1970: 1234567890)
   var aiResponse: Message {
@@ -18,15 +19,8 @@ struct ChatTests {
   
   @Test
   func basicChatFlow() async throws {
+    let store = getStore()
     let userMessage = Message(id: UUID(0), text: "Hello!", role: .user, date: date)
-    
-    let store = await TestStore(initialState: Chat.State()) {
-      Chat()
-    } withDependencies: {
-      $0.uuid = .incrementing
-      $0.date.now = date
-      $0.aiClient.sendMessage = { _ in aiResponse }
-    }
     
     await store.send(\.textChanged, "Hello!") {
       $0.text = "Hello!"
@@ -45,15 +39,34 @@ struct ChatTests {
   }
   
   @Test
-  func userCannotSendEmptyMessage() async throws {
-    let store = await TestStore(initialState: Chat.State()) {
+  func emptyMessageIsNotSent() async throws {
+    let store = getStore()
+    
+    #expect(store.state.text.isEmpty)
+    #expect(store.state.isShowingSendButton == false)
+    await store.send(.sendMessageButtonPressed)
+  }
+  
+  @Test
+  func fieldIsFocusedWhenViewAppearsWithEmptyChat() async throws {
+    let store = getStore()
+    
+    await store.send(\.onAppear) {
+      $0.focusedField = true
+    }
+  }
+}
+
+// MARK: - Helpers
+
+extension ChatTests {
+  private func getStore() -> TestStore<Chat.State, Chat.Action> {
+    TestStore(initialState: Chat.State()) {
       Chat()
     } withDependencies: {
       $0.uuid = .incrementing
       $0.date.now = date
-      $0.aiClient.sendMessage = { _ in aiResponse }
+      $0.aiClient.sendMessage = { [aiResponse] _ in aiResponse }
     }
-    
-    await store.send(.sendMessageButtonPressed)
   }
 }

@@ -11,7 +11,7 @@ import SwiftUI
 
 struct MessageInputView: View {
   @Bindable var store: StoreOf<Chat>
-  @FocusState var focus: Bool
+  @FocusState var focusedField: Bool
   let buttonWidth = 40.0
   let buttonHeight = 30.0
     
@@ -41,7 +41,7 @@ struct MessageInputView: View {
       
       HStack {
         TextField("Enter Message", text: $store.text.sending(\.textChanged), axis: .vertical)
-          .focused($focus)
+          .focused($focusedField)
           .multilineTextAlignment(.leading)
           .padding(10)
         
@@ -50,11 +50,8 @@ struct MessageInputView: View {
       }
     }
     .glassEffect(.regular, in: .rect(cornerRadius: 24))
-    .onAppear {
-      if store.messages.isEmpty {
-        focus = true
-      }
-    }
+    .onAppear { store.send(.onAppear) }
+    .bind($store.focusedField, to: $focusedField)
   }
 }
 
