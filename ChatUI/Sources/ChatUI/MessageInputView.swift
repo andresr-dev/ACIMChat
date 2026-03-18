@@ -13,7 +13,7 @@ struct MessageInputView: View {
   @Bindable var store: StoreOf<Chat>
   @FocusState var focus: Bool
   let buttonWidth = 40.0
-  let buttonHeight = 28.0
+  let buttonHeight = 30.0
     
   var body: some View {
     ZStack(alignment: .bottom) {
@@ -33,8 +33,9 @@ struct MessageInputView: View {
               .frame(width: buttonWidth, height: buttonHeight)
               .background(Color(.accent))
               .clipShape(.capsule)
+              .padding(.bottom, 6)
+              .padding(.trailing, 8)
           }
-          .padding([.trailing, .bottom], 8)
         }
       }
       
