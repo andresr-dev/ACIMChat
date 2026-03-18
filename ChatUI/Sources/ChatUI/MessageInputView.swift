@@ -25,9 +25,7 @@ struct MessageInputView: View {
             store.send(.sendMessageButtonPressed)
           } label: {
             Image(systemName: "arrow.up")
-              .resizable()
-              .scaledToFit()
-              .font(.system(size: 17, weight: .bold))
+              .font(.system(size: 18, weight: .bold))
               .foregroundStyle(.white)
               .frame(width: buttonWidth, height: buttonHeight)
               .background(Color(.accent))
