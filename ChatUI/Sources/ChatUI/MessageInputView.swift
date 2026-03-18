@@ -20,24 +20,26 @@ struct MessageInputView: View {
       HStack {
         Spacer()
         
-        Button {
-          store.send(.sendMessageButtonPressed)
-        } label: {
-          Image(systemName: "arrow.up")
-            .resizable()
-            .scaledToFit()
-            .foregroundStyle(.white)
-            .fontWeight(.bold)
-            .frame(height: 17)
-            .frame(width: buttonWidth, height: buttonHeight)
-            .background(Color(.accent))
-            .clipShape(.capsule)
+        if store.state.isShowingSendButton {
+          Button {
+            store.send(.sendMessageButtonPressed)
+          } label: {
+            Image(systemName: "arrow.up")
+              .resizable()
+              .scaledToFit()
+              .foregroundStyle(.white)
+              .fontWeight(.bold)
+              .frame(height: 17)
+              .frame(width: buttonWidth, height: buttonHeight)
+              .background(Color(.accent))
+              .clipShape(.capsule)
+          }
+          .padding([.trailing, .bottom], 8)
         }
-        .padding([.trailing, .bottom], 8)
       }
       
       HStack {
-        TextField("Enter Message", text: $store.text, axis: .vertical)
+        TextField("Enter Message", text: $store.text.sending(\.textChanged), axis: .vertical)
           .focused($focus)
           .multilineTextAlignment(.leading)
           .padding(10)
@@ -58,7 +60,7 @@ struct MessageInputView: View {
 #Preview {
   MessageInputView(
     store: Store(
-      initialState: Chat.State(text: " ddfdfddkdkdkdkdkdkdk ")
+      initialState: Chat.State(text: "")
     ) {
       Chat()
     }

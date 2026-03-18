@@ -4,10 +4,11 @@ import ComposableArchitecture
 @Reducer
 public struct Chat {
   @ObservableState
-  public struct State: Equatable {
+  public struct State: Equatable, Sendable {
     public var messages: [Message]
     public var text: String
     public var isTyping = false
+    public var isShowingSendButton = false
     
     public init(messages: [Message] = [], text: String = "") {
       self.messages = messages
@@ -15,8 +16,8 @@ public struct Chat {
     }
   }
   
-  public enum Action: BindableAction {
-    case binding(BindingAction<State>)
+  public enum Action {
+    case textChanged(String)
     case sendMessageButtonPressed
     case aiResponse(Result<Message, Error>)
   }
@@ -28,11 +29,14 @@ public struct Chat {
   @Dependency(\.date.now) var now
   
   public var body: some ReducerOf<Self> {
-    BindingReducer()
-    
     Reduce { state, action in
       switch action {
+      case let .textChanged(text):
+        state.text = text
+        return .none
+        
       case .sendMessageButtonPressed:
+        guard !state.text.isEmpty else { return .none }
         let text = state.text
         state.text = ""
         let message = Message(id: uuid(), text: text, role: .user, date: now)
@@ -49,17 +53,17 @@ public struct Chat {
         state.isTyping = false
         
         switch result {
-          case let .success(message):
+        case let .success(message):
           state.messages.append(message)
           return .none
-          
         case .failure:
           return .none
         }
-        
-      case .binding:
-        return .none
       }
+    }
+    .onChange(of: \.text) { oldValue, state in
+      state.isShowingSendButton = !state.text.isEmpty
+      return .none
     }
   }
 }
