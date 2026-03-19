@@ -34,5 +34,12 @@ extension Message {
     Message(text: "This is another answer from the AI, this is an answer from the AI", role: .ai),
     Message(text: "This is yet another question in the chat, this is yet another question in the chat", role: .user),
     Message(text: "This is yet another answer in the chat from AI, this is an answer from the AI", role: .ai),
+    Message(text: "This is a question in the chat, this is a question in the chat", role: .user),
+    Message(text: "This is an answer from the AI, this is an answer from the AI", role: .ai),
+    Message(text: "This is another question in the chat, this is another question in the chat", role: .user),
+    Message(text: "This is another answer from the AI, this is an answer from the AI", role: .ai),
+    Message(text: "This is yet another question in the chat, this is yet another question in the chat", role: .user),
+    Message(text: "This is the last AI answer", role: .ai),
+    Message(text: "This is the last question", role: .user),
   ]
 }

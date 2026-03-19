@@ -1,0 +1,26 @@
+{
+  "history" : [
+    {
+      "content" : "This is a question in the chat, this is a question in the chat",
+      "role" : "user"
+    },
+    {
+      "content" : "This is an answer from the AI, this is an answer from the AI",
+      "role" : "assistant"
+    },
+    {
+      "content" : "This is another question in the chat, this is another question in the chat",
+      "role" : "user"
+    },
+    {
+      "content" : "This is another answer from the AI, this is an answer from the AI",
+      "role" : "assistant"
+    },
+    {
+      "content" : "This is yet another question in the chat, this is yet another question in the chat",
+      "role" : "user"
+    }
+  ],
+  "language" : "en",
+  "question" : "This is yet another answer in the chat from AI, this is an answer from the AI"
+}

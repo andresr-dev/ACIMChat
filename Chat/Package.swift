@@ -12,7 +12,11 @@ let package = Package(
         ),
     ],
     dependencies: [
-      .package(url: "https://github.com/pointfreeco/swift-composable-architecture.git", from: "1.25.2")
+      .package(url: "https://github.com/pointfreeco/swift-composable-architecture.git", from: "1.25.2"),
+      .package(
+        url: "https://github.com/pointfreeco/swift-snapshot-testing",
+        from: "1.19.0"
+      )
     ],
     targets: [
         .target(
@@ -23,7 +27,11 @@ let package = Package(
         ),
         .testTarget(
           name: "ChatTests",
-          dependencies: ["Chat"]
+          dependencies: [
+            "Chat",
+            .product(name: "InlineSnapshotTesting", package: "swift-snapshot-testing"),
+            .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
+          ]
         )
     ],
     swiftLanguageModes: [.v6]

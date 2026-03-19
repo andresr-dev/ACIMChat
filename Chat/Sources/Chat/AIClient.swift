@@ -26,13 +26,13 @@ extension AIClient {
     let passagesUsed: Int
   }
   
-  nonisolated private struct Request: Encodable {
+  nonisolated struct Request: Encodable {
     let question: String
     let language: String
     let history: [ChatMessage]
   }
   
-  private struct ChatMessage: Encodable {
+  struct ChatMessage: Encodable {
     let role: String
     let content: String
     
@@ -61,17 +61,7 @@ extension AIClient: DependencyKey {
       var request = URLRequest(url: url)
       request.httpMethod = "POST"
       request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-      guard let question = messages.last?.text else {
-        throw Error.invalidQuestion
-      }
-      var completeHistory = Array(messages.map(ChatMessage.init).dropLast())
-//      let history = completeHistory.count > 10 ? completeHistory.removeFirst() : completeHistory
-      
-      let body = Request(
-        question: question,
-        language: "en",
-        history: []
-      )
+      let body = try getRequestFrom(messages: messages)
       request.httpBody = try JSONEncoder().encode(body)
       
       let (data, response) = try await URLSession.shared.data(for: request)
@@ -99,4 +89,23 @@ extension AIClient: DependencyKey {
   }
   
   static let testValue = AIClient()
+}
+
+extension AIClient {
+  static func getRequestFrom(messages: [Message]) throws -> Request {
+    guard let question = messages.last?.text else {
+      throw Error.invalidQuestion
+    }
+    var history = Array(messages.map(ChatMessage.init).dropLast())
+    let maxHistorySize = 10
+    if history.count > maxHistorySize {
+      let messagesToRemove = history.count - maxHistorySize
+      history.removeFirst(messagesToRemove)
+    }
+    return Request(
+      question: question,
+      language: "en",
+      history: history
+    )
+  }
 }
