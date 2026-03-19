@@ -44,7 +44,7 @@ struct MessageInputView: View {
       }
       .padding(textFieldPadding)
     }
-    .glassEffect(.regular, in: .rect(cornerRadius: 24))
+    .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 24))
     .onAppear { store.send(.onAppear) }
     .bind($store.focusedField, to: $focusedField)
   }

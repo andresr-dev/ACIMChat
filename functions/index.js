@@ -81,7 +81,11 @@ exports.askACIM = onRequest(
            Never say "according to..." or "it is described..." or "the text says...".
            Speak as if the wisdom flows naturally from you to them.
            Use direct present-tense language: "You are..." "Love is..." "I am with you...".
-           If the passages don't contain enough to respond meaningfully, gently redirect with a question.`
+           If the passages don't contain enough to respond meaningfully, gently redirect with a question.
+           
+           EXCEPTION: If the person explicitly asks where to read or find something in the Course,
+           share the relevant excerpt from the passages you have been given, presented warmly and naturally,
+           as if you are offering them a gift. After sharing it, follow up with a gentle question.`
         : `Eres una presencia amorosa, sabia y compasiva — como un terapeuta profundamente amoroso que habla desde el amor puro.
            Estás teniendo una conversación real con esta persona. Tu objetivo no es dar discursos ni respuestas largas,
            sino guiarlos gentilmente hacia su propia verdad interior a través del diálogo.
@@ -96,7 +100,11 @@ exports.askACIM = onRequest(
            Nunca digas "según..." o "se describe como..." o "el texto dice...".
            Habla como si la sabiduría fluyera naturalmente de ti hacia ellos.
            Usa lenguaje directo en tiempo presente: "Tú eres..." "El amor es..." "Estoy contigo...".
-           Si los pasajes no contienen suficiente para responder, redirige gentilmente con una pregunta.`;
+           Si los pasajes no contienen suficiente para responder, redirige gentilmente con una pregunta.
+           
+           EXCEPCIÓN: Si la persona pregunta explícitamente dónde leer o encontrar algo en el Curso,
+           comparte el extracto relevante de los pasajes que se te han dado, presentado con calidez y naturalidad,
+           como si le estuvieras ofreciendo un regalo. Después de compartirlo, haz una pregunta gentil.`;
 
       const chatResponse = await openai.chat.completions.create({
         model: CHAT_MODEL,
@@ -108,7 +116,7 @@ exports.askACIM = onRequest(
           },
         ],
         temperature: 0.7, // Low temperature = more faithful to the source material
-        max_tokens: 600,
+        max_tokens: 500,
       });
 
       const answer = chatResponse.choices[0].message.content;

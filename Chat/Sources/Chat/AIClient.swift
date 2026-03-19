@@ -10,7 +10,7 @@ import Foundation
 
 @DependencyClient
 struct AIClient {
-  var sendMessage: @Sendable (String) async throws -> Message
+  var sendMessage: @Sendable ([Message]) async throws -> Message
 }
 
 extension DependencyValues {
@@ -26,35 +26,47 @@ extension AIClient {
     let passagesUsed: Int
   }
   
-  nonisolated private struct Request: Codable {
+  nonisolated private struct Request: Encodable {
     let question: String
     let language: String
     let history: [ChatMessage]
   }
   
-  private struct ChatMessage: Codable {
+  private struct ChatMessage: Encodable {
     let role: String
     let content: String
+    
+    init(message: Message) {
+      self.role = message.role.rawValue
+      self.content = message.text
+    }
   }
-}
-
-public enum AIClientError: Error {
-  case invalidURL
-  case invalidResponse
-  case serverError(Int)
-  case decodingError(Error)
+  
+  enum Error: Swift.Error {
+    case invalidURL
+    case invalidResponse
+    case invalidQuestion
+    case serverError(Int)
+    case decodingError(Swift.Error)
+  }
 }
 
 extension AIClient: DependencyKey {
   static let liveValue = AIClient(
-    sendMessage: { question in
+    sendMessage: { messages in
       let url = URL(string: "https://us-central1-acim-chat.cloudfunctions.net/askACIM")
       guard let url else {
-        throw AIClientError.invalidURL
+        throw Error.invalidURL
       }
       var request = URLRequest(url: url)
       request.httpMethod = "POST"
       request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+      guard let question = messages.last?.text else {
+        throw Error.invalidQuestion
+      }
+      var completeHistory = Array(messages.map(ChatMessage.init).dropLast())
+//      let history = completeHistory.count > 10 ? completeHistory.removeFirst() : completeHistory
+      
       let body = Request(
         question: question,
         language: "en",
@@ -65,10 +77,10 @@ extension AIClient: DependencyKey {
       let (data, response) = try await URLSession.shared.data(for: request)
       
       guard let httpResponse = response as? HTTPURLResponse else {
-        throw AIClientError.invalidResponse
+        throw Error.invalidResponse
       }
       guard (200...299).contains(httpResponse.statusCode) else {
-        throw AIClientError.serverError(httpResponse.statusCode)
+        throw Error.serverError(httpResponse.statusCode)
       }
       let decoder = JSONDecoder()
       decoder.keyDecodingStrategy = .convertFromSnakeCase
@@ -76,7 +88,7 @@ extension AIClient: DependencyKey {
         let response = try decoder.decode(Response.self, from: data)
         return Message(text: response.answer, role: .ai)
       } catch {
-        throw AIClientError.decodingError(error)
+        throw Error.decodingError(error)
       }
     }
   )

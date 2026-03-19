@@ -20,21 +20,37 @@ struct ChatTests {
   @Test
   func basicChatFlow() async throws {
     let store = getStore()
-    let userMessage = Message(id: UUID(0), text: "Hello!", role: .user, date: date)
     
     await store.send(\.textChanged, "Hello!") {
       $0.text = "Hello!"
       $0.isShowingSendButton = true
     }
+    let firstUserMessage = Message(id: UUID(0), text: "Hello!", role: .user, date: date)
     await store.send(.sendMessageButtonPressed) {
       $0.text = ""
       $0.isShowingSendButton = false
-      $0.messages = [userMessage]
+      $0.messages = [firstUserMessage]
       $0.isTyping = true
     }
     await store.receive(\.aiResponse.success) {
       $0.isTyping = false
-      $0.messages = [userMessage, aiResponse]
+      $0.messages = [firstUserMessage, aiResponse]
+    }
+    
+    await store.send(\.textChanged, "Hello again!") {
+      $0.text = "Hello again!"
+      $0.isShowingSendButton = true
+    }
+    let secondUserMessage = Message(id: UUID(1), text: "Hello again!", role: .user, date: date)
+    await store.send(.sendMessageButtonPressed) {
+      $0.text = ""
+      $0.isShowingSendButton = false
+      $0.messages = [firstUserMessage, aiResponse, secondUserMessage]
+      $0.isTyping = true
+    }
+    await store.receive(\.aiResponse.success) {
+      $0.isTyping = false
+      $0.messages = [firstUserMessage, aiResponse, secondUserMessage, aiResponse]
     }
   }
   
@@ -77,12 +93,10 @@ struct ChatTests {
 // MARK: - Helpers
 extension ChatTests {
   private func getStore(messages: [Message] = [], text: String = "") -> TestStore<Chat.State, Chat.Action> {
-    TestStore(
-      initialState: Chat.State(
-        messages: messages,
-        text: text
-      )
-    ) {
+    TestStore(initialState: Chat.State(
+      messages: messages,
+      text: text
+    )) {
       Chat()
     } withDependencies: {
       $0.uuid = .incrementing

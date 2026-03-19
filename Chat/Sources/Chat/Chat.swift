@@ -53,9 +53,9 @@ public struct Chat {
         state.messages.append(message)
         state.isTyping = true
         
-        return .run { [aiClient] send in
+        return .run { [aiClient, messages = state.messages] send in
           await send(.aiResponse(Result {
-            try await aiClient.sendMessage(text)
+            try await aiClient.sendMessage(messages)
           }))
         }
         
