@@ -31,6 +31,9 @@ let package = Package(
             "Chat",
             .product(name: "InlineSnapshotTesting", package: "swift-snapshot-testing"),
             .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
+          ],
+          swiftSettings: [
+            .enableExperimentalFeature("StrictConcurrency")
           ]
         )
     ],
