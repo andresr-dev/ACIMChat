@@ -11,7 +11,6 @@ import SwiftUI
 
 public struct ChatView: View {
   @Bindable var store: StoreOf<Chat>
-  @State var position = ScrollPosition(idType: Message.ID.self)
   
   public init(store: StoreOf<Chat>) {
     self.store = store
@@ -21,33 +20,23 @@ public struct ChatView: View {
     VStack(spacing: 0) {
       ScrollView {
         LazyVStack(spacing: 12) {
-          ForEach(store.messages, content: MessageView.init)
-          
-          if store.state.isTyping {
-            TypingIndicator()
-              .frame(maxWidth: .infinity, alignment: .leading)
-              .transition(
-                .asymmetric(
-                  insertion: .opacity,
-                  removal: .identity
-                )
-              )
+          ForEach(store.messages) { message in
+            VStack(alignment: .leading, spacing: 12) {
+              MessageView(message: message)
+              
+              if store.messages.last == message, store.isTyping {
+                TypingIndicator()
+              }
+            }
+            .id(message.id)
           }
         }
         .padding([.horizontal])
         .scrollTargetLayout()
       }
-      .defaultScrollAnchor(.bottom)
-      .scrollPosition($position, anchor: .bottom)
       .scrollDismissesKeyboard(.interactively)
-      .onChange(of: store.messages) { _, newValue in
-        if let id = newValue.last?.id {
-          position.scrollTo(id: id, anchor: .bottom)
-        }
-      }
-      .animation(.easeOut, value: store.messages)
-      .animation(.easeOut, value: position)
-      .animation(.default, value: store.isTyping)
+      .defaultScrollAnchor(.bottom)
+      .scrollPosition(id: $store.scrollPosition, anchor: .bottom)
       .padding(.top, 12)
       
       MessageInputView(store: store)

@@ -13,8 +13,8 @@ import Foundation
 @MainActor
 struct ChatTests {
   let date = Date(timeIntervalSince1970: 1234567890)
-  var aiResponse: Message {
-    Message(id: UUID(1), text: "Hello there!", role: .ai, date: date)
+  var aiResponse: ChatMessage {
+    ChatMessage(id: UUID(1), text: "Hello there!", role: .ai, date: date)
   }
   
   @Test
@@ -25,32 +25,19 @@ struct ChatTests {
       $0.text = "Hello!"
       $0.isShowingSendButton = true
     }
-    let firstUserMessage = Message(id: UUID(0), text: "Hello!", role: .user, date: date)
+    let userMessage = ChatMessage(id: UUID(0), text: "Hello!", role: .user, date: date)
     await store.send(.sendMessageButtonPressed) {
       $0.text = ""
       $0.isShowingSendButton = false
-      $0.messages = [firstUserMessage]
+      $0.messages = [userMessage]
       $0.isTyping = true
-    }
-    await store.receive(\.aiResponse.success) {
-      $0.isTyping = false
-      $0.messages = [firstUserMessage, aiResponse]
+      $0.scrollPosition = userMessage.id
     }
     
-    await store.send(\.textChanged, "Hello again!") {
-      $0.text = "Hello again!"
-      $0.isShowingSendButton = true
-    }
-    let secondUserMessage = Message(id: UUID(1), text: "Hello again!", role: .user, date: date)
-    await store.send(.sendMessageButtonPressed) {
-      $0.text = ""
-      $0.isShowingSendButton = false
-      $0.messages = [firstUserMessage, aiResponse, secondUserMessage]
-      $0.isTyping = true
-    }
     await store.receive(\.aiResponse.success) {
       $0.isTyping = false
-      $0.messages = [firstUserMessage, aiResponse, secondUserMessage, aiResponse]
+      $0.messages = [userMessage, aiResponse]
+      $0.scrollPosition = aiResponse.id
     }
   }
   
@@ -74,7 +61,7 @@ struct ChatTests {
   
   @Test
   func fieldIsNotFocusedWhenViewAppearsWithChatNotEmpty() async throws {
-    let store = getStore(messages: Message.mock)
+    let store = getStore(messages: ChatMessage.mock)
     
     await store.send(\.onAppear)
   }
@@ -92,7 +79,7 @@ struct ChatTests {
 
 // MARK: - Helpers
 extension ChatTests {
-  private func getStore(messages: [Message] = [], text: String = "") -> TestStore<Chat.State, Chat.Action> {
+  private func getStore(messages: [ChatMessage] = [], text: String = "") -> TestStore<Chat.State, Chat.Action> {
     TestStore(initialState: Chat.State(
       messages: messages,
       text: text

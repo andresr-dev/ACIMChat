@@ -10,7 +10,7 @@ import Foundation
 
 @DependencyClient
 struct AIClient {
-  var sendMessage: @Sendable ([Message]) async throws -> Message
+  var sendMessage: @Sendable ([ChatMessage]) async throws -> ChatMessage
 }
 
 extension DependencyValues {
@@ -29,14 +29,14 @@ extension AIClient {
   nonisolated struct Request: Encodable {
     let question: String
     let language: String
-    let history: [ChatMessage]
+    let history: [RequestChatMessage]
   }
   
-  struct ChatMessage: Encodable {
+  struct RequestChatMessage: Encodable {
     let role: String
     let content: String
     
-    init(message: Message) {
+    init(message: ChatMessage) {
       self.role = message.role.rawValue
       self.content = message.text
     }
@@ -76,7 +76,7 @@ extension AIClient: DependencyKey {
       decoder.keyDecodingStrategy = .convertFromSnakeCase
       do {
         let response = try decoder.decode(Response.self, from: data)
-        return Message(text: response.answer, role: .ai)
+        return ChatMessage(text: response.answer, role: .ai)
       } catch {
         throw Error.decodingError(error)
       }
@@ -85,18 +85,18 @@ extension AIClient: DependencyKey {
   
   static let previewValue = AIClient { question in
     try await Task.sleep(for: .seconds(2))
-    return Message(text: "I don't know, try asking me something else.", role: .ai)
+    return ChatMessage(text: "I don't know, try asking me something else.", role: .ai)
   }
   
   static let testValue = AIClient()
 }
 
 extension AIClient {
-  static func getRequestFrom(messages: [Message]) throws -> Request {
+  static func getRequestFrom(messages: [ChatMessage]) throws -> Request {
     guard let question = messages.last?.text else {
       throw Error.invalidQuestion
     }
-    var history = Array(messages.map(ChatMessage.init).dropLast())
+    var history = Array(messages.map(RequestChatMessage.init).dropLast())
     let maxHistorySize = 10
     if history.count > maxHistorySize {
       let messagesToRemove = history.count - maxHistorySize
@@ -104,7 +104,7 @@ extension AIClient {
     }
     return Request(
       question: question,
-      language: "en",
+      language: "es",
       history: history
     )
   }

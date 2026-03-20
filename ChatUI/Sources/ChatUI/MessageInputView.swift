@@ -18,7 +18,7 @@ struct MessageInputView: View {
     
   var body: some View {
     ZStack(alignment: .bottom) {
-      if store.state.isShowingSendButton {
+      if store.isShowingSendButton {
         Button {
           store.send(.sendMessageButtonPressed)
         } label: {

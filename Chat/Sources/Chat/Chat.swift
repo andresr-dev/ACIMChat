@@ -1,17 +1,19 @@
 
 import ComposableArchitecture
+import Foundation
 
 @Reducer
 public struct Chat {
   @ObservableState
   public struct State: Equatable, Sendable {
-    public var messages: [Message]
+    public var messages: [ChatMessage]
     public var text: String
-    public var isTyping = false
     public var isShowingSendButton = false
     public var focusedField = false
+    public var isTyping = false
+    public var scrollPosition: UUID?
     
-    public init(messages: [Message] = [], text: String = "") {
+    public init(messages: [ChatMessage] = [], text: String = "") {
       self.messages = messages
       self.text = text
     }
@@ -22,7 +24,7 @@ public struct Chat {
     case onAppear
     case textChanged(String)
     case sendMessageButtonPressed
-    case aiResponse(Result<Message, Error>)
+    case aiResponse(Result<ChatMessage, Error>)
   }
   
   public init() { }
@@ -49,9 +51,10 @@ public struct Chat {
         guard !state.text.isEmpty else { return .none }
         let text = state.text
         state.text = ""
-        let message = Message(id: uuid(), text: text, role: .user, date: now)
+        let message = ChatMessage(id: uuid(), text: text, role: .user, date: now)
         state.messages.append(message)
         state.isTyping = true
+        state.scrollPosition = message.id
         
         return .run { [aiClient, messages = state.messages] send in
           await send(.aiResponse(Result {
@@ -65,6 +68,7 @@ public struct Chat {
         switch result {
         case let .success(message):
           state.messages.append(message)
+          state.scrollPosition = message.id
           return .none
         case .failure:
           return .none

@@ -13,7 +13,7 @@ import Testing
 struct AIClientTests {
   
   @Test func requestHistoryDropsOldMessages() async throws {
-    let request = try AIClient.getRequestFrom(messages: Message.mock)
+    let request = try AIClient.getRequestFrom(messages: ChatMessage.mock)
     #expect(request.history.count == 10)
     
     assertInlineSnapshot(of: request, as: .json) {

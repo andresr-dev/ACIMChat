@@ -3,7 +3,7 @@ import Chat
 import SwiftUI
 
 struct MessageView: View {
-  let message: Message
+  let message: ChatMessage
   
   var body: some View {
     VStack {
@@ -36,7 +36,6 @@ struct MessageView: View {
           .frame(maxWidth: .infinity, alignment: alignment)
       }
     }
-    .id(message.id)
   }
 }
 
