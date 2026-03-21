@@ -8,10 +8,12 @@ public struct Chat {
   public struct State: Equatable, Sendable {
     public var messages: [ChatMessage]
     public var text: String
-    public var isShowingSendButton = false
     public var focusedField = false
     public var isTyping = false
     public var scrollPosition: UUID?
+    public var isShowingSendButton: Bool {
+      !text.isEmpty
+    }
     
     public init(messages: [ChatMessage] = [], text: String = "") {
       self.messages = messages
@@ -22,7 +24,6 @@ public struct Chat {
   public enum Action: BindableAction {
     case binding(BindingAction<State>)
     case onAppear
-    case textChanged(String)
     case sendMessageButtonPressed
     case aiResponse(Result<ChatMessage, Error>)
   }
@@ -40,21 +41,19 @@ public struct Chat {
       switch action {
       case .onAppear:
         state.focusedField = state.messages.isEmpty
-        state.isShowingSendButton = !state.text.isEmpty
-        return .none
-        
-      case let .textChanged(text):
-        state.text = text
         return .none
         
       case .sendMessageButtonPressed:
         guard !state.text.isEmpty else { return .none }
         let text = state.text
         state.text = ""
+        let lastScrolledID = state.messages.last?.id
         let message = ChatMessage(id: uuid(), text: text, role: .user, date: now)
         state.messages.append(message)
         state.isTyping = true
-        state.scrollPosition = message.id
+        if state.scrollPosition == lastScrolledID {
+          state.scrollPosition = message.id
+        }
         
         return .run { [aiClient, messages = state.messages] send in
           await send(.aiResponse(Result {
@@ -67,8 +66,11 @@ public struct Chat {
         
         switch result {
         case let .success(message):
+          let lastScrolledID = state.messages.last?.id
           state.messages.append(message)
-          state.scrollPosition = message.id
+          if state.scrollPosition == lastScrolledID {
+            state.scrollPosition = message.id
+          }
           return .none
         case .failure:
           return .none
@@ -77,10 +79,6 @@ public struct Chat {
       case .binding:
         return .none
       }
-    }
-    .onChange(of: \.text) { oldValue, state in
-      state.isShowingSendButton = !state.text.isEmpty
-      return .none
     }
   }
 }

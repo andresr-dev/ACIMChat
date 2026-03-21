@@ -34,7 +34,7 @@ struct MessageInputView: View {
       }
       
       HStack(spacing: 12) {
-        TextField("Enter Message", text: $store.text.sending(\.textChanged), axis: .vertical)
+        TextField("Ingresa Mensaje", text: $store.text, axis: .vertical)
           .focused($focusedField)
           .multilineTextAlignment(.leading)
           .padding(.leading, 5)

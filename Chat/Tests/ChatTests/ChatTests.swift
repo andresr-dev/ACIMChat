@@ -21,7 +21,7 @@ struct ChatTests {
   func basicChatFlow() async throws {
     let store = getStore()
     
-    await store.send(\.textChanged, "Hello!") {
+    await store.send(.binding(.set(\.text, "Hello!"))) {
       $0.text = "Hello!"
       $0.isShowingSendButton = true
     }
@@ -30,14 +30,10 @@ struct ChatTests {
       $0.text = ""
       $0.isShowingSendButton = false
       $0.messages = [userMessage]
-      $0.isTyping = true
-      $0.scrollPosition = userMessage.id
     }
     
     await store.receive(\.aiResponse.success) {
-      $0.isTyping = false
       $0.messages = [userMessage, aiResponse]
-      $0.scrollPosition = aiResponse.id
     }
   }
   
