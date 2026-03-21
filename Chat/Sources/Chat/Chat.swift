@@ -47,13 +47,10 @@ public struct Chat {
         guard !state.text.isEmpty else { return .none }
         let text = state.text
         state.text = ""
-        let lastScrolledID = state.messages.last?.id
         let message = ChatMessage(id: uuid(), text: text, role: .user, date: now)
         state.messages.append(message)
         state.isTyping = true
-        if state.scrollPosition == lastScrolledID {
-          state.scrollPosition = message.id
-        }
+        state.scrollPosition = message.id
         
         return .run { [aiClient, messages = state.messages] send in
           await send(.aiResponse(Result {
