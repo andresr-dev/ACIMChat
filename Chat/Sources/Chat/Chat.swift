@@ -24,6 +24,7 @@ public struct Chat {
   public enum Action: BindableAction {
     case binding(BindingAction<State>)
     case onAppear
+    case scrollToBottom
     case sendMessageButtonPressed
     case aiResponse(Result<ChatMessage, Error>)
   }
@@ -43,19 +44,29 @@ public struct Chat {
         state.focusedField = state.messages.isEmpty
         return .none
         
+      case .scrollToBottom:
+        state.scrollPosition = state.messages.last?.id
+        return .none
+        
       case .sendMessageButtonPressed:
         guard !state.text.isEmpty else { return .none }
         let text = state.text
-        state.text = ""
         let message = ChatMessage(id: uuid(), text: text, role: .user, date: now)
         state.messages.append(message)
         state.isTyping = true
-        state.scrollPosition = message.id
+        state.text = ""
+        let messagesToSend = Array(state.messages.suffix(11))
         
-        return .run { [aiClient, messages = state.messages] send in
-          await send(.aiResponse(Result {
-            try await aiClient.sendMessage(messages)
-          }))
+        return .run { [aiClient] send in
+          Task {
+            await send(.aiResponse(Result {
+              try await aiClient.sendMessage(messagesToSend)
+            }))
+          }
+          Task {
+            try await Task.sleep(for: .seconds(0.2))
+            await send(.scrollToBottom, animation: .default)
+          }
         }
         
       case let .aiResponse(result):
@@ -65,10 +76,13 @@ public struct Chat {
         case let .success(message):
           let lastScrolledID = state.messages.last?.id
           state.messages.append(message)
-          if state.scrollPosition == lastScrolledID {
-            state.scrollPosition = message.id
+          return .run { [scrollPosition = state.scrollPosition] send in
+            Task {
+              guard scrollPosition == lastScrolledID else { return }
+              try await Task.sleep(for: .seconds(0.2))
+              await send(.scrollToBottom, animation: .default)
+            }
           }
-          return .none
         case .failure:
           return .none
         }

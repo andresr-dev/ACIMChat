@@ -26,6 +26,7 @@ public struct ChatView: View {
               
               if store.messages.last == message, store.isTyping {
                 TypingIndicator()
+                  .transition(.identity)
               }
             }
             .id(message.id)
@@ -52,6 +53,7 @@ public struct ChatView: View {
   ChatView(
     store: Store(initialState: Chat.State()) {
       Chat()
+        ._printChanges()
     }
   )
 }

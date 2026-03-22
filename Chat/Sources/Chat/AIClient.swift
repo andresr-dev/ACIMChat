@@ -61,7 +61,16 @@ extension AIClient: DependencyKey {
       var request = URLRequest(url: url)
       request.httpMethod = "POST"
       request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-      let body = try getRequestFrom(messages: messages)
+      guard let question = messages.last?.text else {
+        throw Error.invalidQuestion
+      }
+      let history = messages.map(RequestChatMessage.init)
+      
+      let body = Request(
+        question: question,
+        language: "es",
+        history: history
+      )
       request.httpBody = try JSONEncoder().encode(body)
       
       let (data, response) = try await URLSession.shared.data(for: request)
@@ -89,23 +98,4 @@ extension AIClient: DependencyKey {
   }
   
   static let testValue = AIClient()
-}
-
-extension AIClient {
-  static func getRequestFrom(messages: [ChatMessage]) throws -> Request {
-    guard let question = messages.last?.text else {
-      throw Error.invalidQuestion
-    }
-    var history = Array(messages.map(RequestChatMessage.init).dropLast())
-    let maxHistorySize = 10
-    if history.count > maxHistorySize {
-      let messagesToRemove = history.count - maxHistorySize
-      history.removeFirst(messagesToRemove)
-    }
-    return Request(
-      question: question,
-      language: "es",
-      history: history
-    )
-  }
 }
