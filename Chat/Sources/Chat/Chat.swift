@@ -24,6 +24,7 @@ public struct Chat {
   public enum Action: BindableAction {
     case binding(BindingAction<State>)
     case onAppear
+    case startScrollDelay
     case scrollToBottom
     case sendMessageButtonPressed
     case aiResponse(Result<ChatMessage, Error>)
@@ -34,6 +35,7 @@ public struct Chat {
   @Dependency(\.aiClient) var aiClient
   @Dependency(\.uuid) var uuid
   @Dependency(\.date.now) var now
+  @Dependency(\.continuousClock) var clock
   
   public var body: some ReducerOf<Self> {
     BindingReducer()
@@ -43,6 +45,12 @@ public struct Chat {
       case .onAppear:
         state.focusedField = state.messages.isEmpty
         return .none
+        
+      case .startScrollDelay:
+        return .run { [clock] send in
+          try await clock.sleep(for: .seconds(0.2))
+          await send(.scrollToBottom, animation: .default)
+        }
         
       case .scrollToBottom:
         state.scrollPosition = state.messages.last?.id
@@ -58,15 +66,10 @@ public struct Chat {
         let messagesToSend = Array(state.messages.suffix(11))
         
         return .run { [aiClient] send in
-          Task {
-            await send(.aiResponse(Result {
-              try await aiClient.sendMessage(messagesToSend)
-            }))
-          }
-          Task {
-            try await Task.sleep(for: .seconds(0.2))
-            await send(.scrollToBottom, animation: .default)
-          }
+          await send(.startScrollDelay)
+          await send(.aiResponse(Result {
+            try await aiClient.sendMessage(messagesToSend)
+          }))
         }
         
       case let .aiResponse(result):
@@ -77,11 +80,8 @@ public struct Chat {
           let lastScrolledID = state.messages.last?.id
           state.messages.append(message)
           return .run { [scrollPosition = state.scrollPosition] send in
-            Task {
-              guard scrollPosition == lastScrolledID else { return }
-              try await Task.sleep(for: .seconds(0.2))
-              await send(.scrollToBottom, animation: .default)
-            }
+            guard scrollPosition == lastScrolledID else { return }
+            await send(.startScrollDelay)
           }
         case .failure:
           return .none

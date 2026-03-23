@@ -13,32 +13,33 @@ import Foundation
 @MainActor
 struct ChatTests {
   let date = Date(timeIntervalSince1970: 1234567890)
-  var aiResponse: ChatMessage {
-    ChatMessage(id: UUID(1), text: "Hello there!", role: .ai, date: date)
-  }
   
-  @Test
-  func basicChatFlow() async throws {
+  @Test func basicChatFlow() async throws {
     let store = getStore()
     
     await store.send(.binding(.set(\.text, "Hello!"))) {
       $0.text = "Hello!"
-      $0.isShowingSendButton = true
-    }
-    let userMessage = ChatMessage(id: UUID(0), text: "Hello!", role: .user, date: date)
-    await store.send(.sendMessageButtonPressed) {
-      $0.text = ""
-      $0.isShowingSendButton = false
-      $0.messages = [userMessage]
     }
     
+    let userMessage = ChatMessage(id: UUID(0), text: "Hello!", role: .user, date: date)
+    await store.send(.sendMessageButtonPressed) {
+      $0.messages = [userMessage]
+      $0.isTyping = true
+      $0.text = ""
+    }
+    
+    let aiResponse = ChatMessage(id: UUID(1), text: "Hello there!", role: .ai, date: date)
+    await store.receive(\.startScrollDelay)
     await store.receive(\.aiResponse.success) {
+      $0.isTyping = false
       $0.messages = [userMessage, aiResponse]
+    }
+    await store.receive(\.scrollToBottom) {
+      $0.scrollPosition = UUID(1)
     }
   }
   
-  @Test
-  func emptyMessageIsNotSent() async throws {
+  @Test func emptyMessageIsNotSent() async throws {
     let store = getStore()
     
     #expect(store.state.text.isEmpty)
@@ -46,8 +47,7 @@ struct ChatTests {
     await store.send(.sendMessageButtonPressed)
   }
   
-  @Test
-  func fieldIsFocusedWhenViewAppearsWithEmptyChat() async throws {
+  @Test func fieldIsFocusedWhenViewAppearsWithEmptyChat() async throws {
     let store = getStore()
     
     await store.send(\.onAppear) {
@@ -55,27 +55,38 @@ struct ChatTests {
     }
   }
   
-  @Test
-  func fieldIsNotFocusedWhenViewAppearsWithChatNotEmpty() async throws {
+  @Test func fieldIsNotFocusedWhenViewAppearsWithChatNotEmpty() async throws {
     let store = getStore(messages: ChatMessage.mock)
     
     await store.send(\.onAppear)
   }
   
-  @Test
-  func sendButtonIsVisibleWhenViewAppearsWithTextFieldPopulated() async throws {
+  @Test func sendButtonIsVisibleWhenViewAppearsWithTextFieldPopulated() async throws {
     let store = getStore(text: "Hello")
     
     await store.send(\.onAppear) {
       $0.focusedField = true
-      $0.isShowingSendButton = true
     }
   }
+  
+//  @Test func historyDoesNotExceedElevenMessages() async throws {
+//    var messagesSent = [ChatMessage]()
+//    let store = getStore(
+//      sendMessage: { messages in
+//        messagesSent = messages
+//        return messages[0]
+//      }
+//    )
+//  }
 }
 
 // MARK: - Helpers
 extension ChatTests {
-  private func getStore(messages: [ChatMessage] = [], text: String = "") -> TestStore<Chat.State, Chat.Action> {
+  private func getStore(
+    messages: [ChatMessage] = [],
+    text: String = "",
+    sendMessage: @escaping @Sendable ([ChatMessage]) -> ChatMessage = { _ in ChatMessage(id: UUID(1), text: "Hello there!", role: .ai, date: Date(timeIntervalSince1970: 1234567890)) }
+  ) -> TestStore<Chat.State, Chat.Action> {
     TestStore(initialState: Chat.State(
       messages: messages,
       text: text
@@ -84,7 +95,8 @@ extension ChatTests {
     } withDependencies: {
       $0.uuid = .incrementing
       $0.date.now = date
-      $0.aiClient.sendMessage = { [aiResponse] _ in aiResponse }
+      $0.aiClient.sendMessage = sendMessage
+      $0.continuousClock = .immediate
     }
   }
 }

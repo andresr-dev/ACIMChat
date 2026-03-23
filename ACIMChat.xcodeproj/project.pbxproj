@@ -20,7 +20,6 @@
 		417644862F68A34C008B01B2 /* Chat */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Chat; sourceTree = "<group>"; };
 		4197C4682F5FB33C0020CE35 /* ACIMChat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ACIMChat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4197C5A72F631D720020CE35 /* ChatUI */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = ChatUI; sourceTree = "<group>"; };
-		41CDD2552F6A49FA0083BAE0 /* Chat.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; name = Chat.xctestplan; path = Chat/Chat.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -52,7 +51,6 @@
 		4197C45F2F5FB33C0020CE35 = {
 			isa = PBXGroup;
 			children = (
-				41CDD2552F6A49FA0083BAE0 /* Chat.xctestplan */,
 				4197C46A2F5FB33C0020CE35 /* ACIMChat */,
 				4197C5A02F610B110020CE35 /* Frameworks */,
 				4197C4692F5FB33C0020CE35 /* Products */,
