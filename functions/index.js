@@ -7,6 +7,9 @@ const { getFirestore } = require("firebase-admin/firestore");
 
 initializeApp();
 
+// ─────────────────────────────────────────────
+// SECRETS — stored securely in Firebase, never in code
+// ─────────────────────────────────────────────
 const OPENAI_API_KEY_SECRET   = defineSecret("OPENAI_API_KEY");
 const PINECONE_API_KEY_SECRET = defineSecret("PINECONE_API_KEY");
 
@@ -22,6 +25,8 @@ const EMBEDDING_MODEL = "text-embedding-3-small";
 const CONFIG_DEFAULTS = {
   topK: 5,
   chatModel: "gpt-4o-mini",
+  temperature: 0.7,
+  maxTokens: 450,
   systemPromptEn: `You are a loving, wise, and compassionate presence — like a deeply caring therapist who speaks from a place of pure love.
 You are having a real conversation with this person. Your goal is not to lecture or give long answers,
 but to gently guide them toward their own inner truth through dialogue.
@@ -92,7 +97,7 @@ exports.askACIM = onRequest(
         ? { ...CONFIG_DEFAULTS, ...configSnap.data() }
         : CONFIG_DEFAULTS;
 
-      const { topK, chatModel, systemPromptEn, systemPromptEs } = config;
+      const { topK, chatModel, temperature, maxTokens, systemPromptEn, systemPromptEs } = config;
       const systemPrompt = language === "en" ? systemPromptEn : systemPromptEs;
 
       const openai   = new OpenAI({ apiKey: OPENAI_API_KEY_SECRET.value() });
@@ -138,8 +143,8 @@ exports.askACIM = onRequest(
             content: `Relevant wisdom for context:\n\n${passages}\n\nPerson: ${question}`,
           },
         ],
-        temperature: 0.7,
-        max_tokens: 450,
+        temperature: temperature,
+        max_tokens: maxTokens,
       });
 
       const answer = chatResponse.choices[0].message.content;

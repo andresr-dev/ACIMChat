@@ -1,7 +1,7 @@
 {
   "configurations" : [
     {
-      "id" : "EA74CD3B-E1E6-4725-B615-89E930914242",
+      "id" : "1595A2E7-9EB0-4186-A042-4A4381BBAC77",
       "name" : "Configuration 1",
       "options" : {
 
@@ -12,13 +12,7 @@
 
   },
   "testTargets" : [
-    {
-      "target" : {
-        "containerPath" : "container:..\/Chat",
-        "identifier" : "ChatTests",
-        "name" : "ChatTests"
-      }
-    }
+
   ],
   "version" : 1
 }
