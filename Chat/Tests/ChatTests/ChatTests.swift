@@ -14,12 +14,12 @@ import Foundation
 struct ChatTests {
   let date = Date(timeIntervalSince1970: 1234567890)
   var userMessage: ChatMessage {
-    ChatMessage(id: UUID(0), text: "Hello!", role: .user, date: date)
+    ChatMessage(id: UUID(0), text: "Hello!", role: .user, date: date, displayingDate: true)
   }
   var aiResponse: ChatMessage {
-    ChatMessage(id: UUID(1), text: "Hello there!", role: .ai, date: date)
+    ChatMessage(id: UUID(2), text: "Hello there!", role: .ai, date: date)
   }
-  
+  @Dependency(\.uuid) var uuid
   @Test func basicChatFlow() async throws {
     let store = getStore()
     
@@ -41,6 +41,24 @@ struct ChatTests {
     await store.receive(\.scrollToBottom) {
       $0.scrollPosition = aiResponse.id
     }
+    
+    await store.send(.binding(.set(\.text, "Hello Again!"))) {
+      $0.text = "Hello Again!"
+    }
+    let secondUserMessage = ChatMessage(id: UUID(1), text: "Hello Again!", role: .user, date: date)
+    
+    await store.send(.sendMessageButtonPressed) {
+      $0.messages = [userMessage, aiResponse, secondUserMessage]
+      $0.isTyping = true
+      $0.text = ""
+    }
+    await store.receive(\.startScrollDelay)
+    
+    await store.receive(\.aiResponse.success) {
+      $0.isTyping = false
+      $0.messages = [userMessage, aiResponse, secondUserMessage, aiResponse]
+    }
+    await store.receive(\.scrollToBottom)
   }
   
   @Test func emptyMessageIsNotSent() async throws {
@@ -108,7 +126,7 @@ extension ChatTests {
     messages: [ChatMessage] = [],
     text: String = "",
     sendMessage: @escaping @Sendable ([ChatMessage]) async throws -> ChatMessage = { _ in
-      ChatMessage(id: UUID(1), text: "Hello there!", role: .ai, date: Date(timeIntervalSince1970: 1234567890))
+      ChatMessage(id: UUID(2), text: "Hello there!", role: .ai, date: Date(timeIntervalSince1970: 1234567890))
     },
     fileID: StaticString = #fileID,
     file filePath: StaticString = #filePath,

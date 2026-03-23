@@ -12,17 +12,19 @@ public struct ChatMessage: Equatable, Identifiable, Sendable {
   public let text: String
   public let role: Role
   public let date: Date
+  public let displayingDate: Bool
   
   public enum Role: String, Sendable {
     case user
     case ai = "assistant"
   }
   
-  public init(id: UUID = UUID(), text: String, role: Role, date: Date = Date()) {
+  public init(id: UUID = UUID(), text: String, role: Role, date: Date = Date(), displayingDate: Bool = false) {
     self.id = id
     self.text = text
     self.role = role
     self.date = date
+    self.displayingDate = displayingDate
   }
 }
 

@@ -7,8 +7,8 @@ struct MessageView: View {
   
   var body: some View {
     VStack {
-      if message.role == .user {
-        Text(message.date.formatted(date: .abbreviated, time: .shortened))
+      if message.displayingDate {
+        Text(message.date.formatted(date: .abbreviated, time: .omitted))
           .font(.caption)
           .foregroundStyle(.secondary)
       }

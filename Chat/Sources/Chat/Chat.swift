@@ -12,6 +12,7 @@ public struct Chat {
     public var isTyping = false
     public var scrollPosition: UUID?
     @Presents public var alert: AlertState<Action.Alert>?
+    
     public var isShowingSendButton: Bool {
       !text.isEmpty
     }
@@ -64,7 +65,11 @@ public struct Chat {
       case .sendMessageButtonPressed:
         guard !state.text.isEmpty else { return .none }
         let text = state.text
-        let message = ChatMessage(id: uuid(), text: text, role: .user, date: now)
+        var displayingDate = state.messages.isEmpty
+        if let lastMessageDate = state.messages.last?.date {
+          displayingDate = !Calendar.current.isDate(now, inSameDayAs: lastMessageDate)
+        }
+        let message = ChatMessage(id: uuid(), text: text, role: .user, date: now, displayingDate: displayingDate)
         state.messages.append(message)
         state.isTyping = true
         state.text = ""
