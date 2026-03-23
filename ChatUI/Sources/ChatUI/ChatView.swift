@@ -46,6 +46,7 @@ public struct ChatView: View {
         .background()
         .ignoresSafeArea()
     }
+    .alert($store.scope(state: \.alert, action: \.alert))
   }
 }
 
@@ -53,7 +54,6 @@ public struct ChatView: View {
   ChatView(
     store: Store(initialState: Chat.State()) {
       Chat()
-        ._printChanges()
     }
   )
 }

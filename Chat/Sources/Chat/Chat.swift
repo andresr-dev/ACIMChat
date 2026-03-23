@@ -5,12 +5,13 @@ import Foundation
 @Reducer
 public struct Chat {
   @ObservableState
-  public struct State: Equatable, Sendable {
+  public struct State: Equatable {
     public var messages: [ChatMessage]
     public var text: String
     public var focusedField = false
     public var isTyping = false
     public var scrollPosition: UUID?
+    @Presents public var alert: AlertState<Action.Alert>?
     public var isShowingSendButton: Bool {
       !text.isEmpty
     }
@@ -28,6 +29,10 @@ public struct Chat {
     case scrollToBottom
     case sendMessageButtonPressed
     case aiResponse(Result<ChatMessage, Error>)
+    case alert(PresentationAction<Alert>)
+    
+    @CasePathable
+    public enum Alert: Equatable, Sendable { }
   }
   
   public init() { }
@@ -84,12 +89,22 @@ public struct Chat {
             await send(.startScrollDelay)
           }
         case .failure:
+          state.alert = Self.errorAlert
           return .none
         }
         
-      case .binding:
+      case .binding, .alert:
         return .none
       }
     }
+    .ifLet(\.$alert, action: \.alert)
+  }
+}
+
+extension Chat {
+  static let errorAlert = AlertState<Action.Alert> {
+    TextState("Error")
+  } message: {
+    TextState("Por favor espera un momento e intenta de nuevo.")
   }
 }
