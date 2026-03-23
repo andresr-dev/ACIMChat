@@ -12,7 +12,6 @@ import ComposableArchitecture
 
 @Suite(.snapshots(record: .failed))
 struct AIClientTests {
-  @Dependency(\.aiClient) var aiClient
   
   @Test func requestHistoryDropsOldMessages() async throws {
 //    let request = try AIClient.getRequestFrom(messages: ChatMessage.mock)

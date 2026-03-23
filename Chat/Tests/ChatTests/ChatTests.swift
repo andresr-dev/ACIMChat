@@ -13,6 +13,9 @@ import Foundation
 @MainActor
 struct ChatTests {
   let date = Date(timeIntervalSince1970: 1234567890)
+  var aiResponse: ChatMessage {
+    ChatMessage(id: UUID(1), text: "Hello there!", role: .ai, date: date)
+  }
   
   @Test func basicChatFlow() async throws {
     let store = getStore()
@@ -28,7 +31,6 @@ struct ChatTests {
       $0.text = ""
     }
     
-    let aiResponse = ChatMessage(id: UUID(1), text: "Hello there!", role: .ai, date: date)
     await store.receive(\.startScrollDelay)
     await store.receive(\.aiResponse.success) {
       $0.isTyping = false
@@ -84,8 +86,7 @@ struct ChatTests {
 extension ChatTests {
   private func getStore(
     messages: [ChatMessage] = [],
-    text: String = "",
-    sendMessage: @escaping @Sendable ([ChatMessage]) -> ChatMessage = { _ in ChatMessage(id: UUID(1), text: "Hello there!", role: .ai, date: Date(timeIntervalSince1970: 1234567890)) }
+    text: String = ""
   ) -> TestStore<Chat.State, Chat.Action> {
     TestStore(initialState: Chat.State(
       messages: messages,
@@ -95,7 +96,7 @@ extension ChatTests {
     } withDependencies: {
       $0.uuid = .incrementing
       $0.date.now = date
-      $0.aiClient.sendMessage = sendMessage
+      $0.aiClient.sendMessage = { [aiResponse] _ in aiResponse }
       $0.continuousClock = .immediate
     }
   }

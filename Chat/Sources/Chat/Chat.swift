@@ -63,12 +63,12 @@ public struct Chat {
         state.messages.append(message)
         state.isTyping = true
         state.text = ""
-        let messagesToSend = Array(state.messages.suffix(11))
+        let messages = Array(state.messages.suffix(11))
         
         return .run { [aiClient] send in
           await send(.startScrollDelay)
           await send(.aiResponse(Result {
-            try await aiClient.sendMessage(messagesToSend)
+            try await aiClient.sendMessage(messages)
           }))
         }
         
