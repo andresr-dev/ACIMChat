@@ -9,6 +9,7 @@ import Testing
 @testable import Chat
 import ComposableArchitecture
 import Foundation
+import Synchronization
 
 @MainActor
 struct ChatTests {
@@ -19,9 +20,18 @@ struct ChatTests {
   var aiResponse: ChatMessage {
     ChatMessage(id: UUID(2), text: "Hello there!", role: .ai, date: date)
   }
-  @Dependency(\.uuid) var uuid
+  
   @Test func basicChatFlow() async throws {
-    let store = getStore()
+    let store = TestStore(initialState: Chat.State()) {
+      Chat()
+    } withDependencies: {
+      $0.uuid = .incrementing
+      $0.continuousClock = .immediate
+      $0.date.now = date
+      $0.aiClient.sendMessage = { [aiResponse] _ in
+        aiResponse
+      }
+    }
     
     await store.send(.binding(.set(\.text, "Hello!"))) {
       $0.text = "Hello!"
@@ -45,7 +55,15 @@ struct ChatTests {
     await store.send(.binding(.set(\.text, "Hello Again!"))) {
       $0.text = "Hello Again!"
     }
-    let secondUserMessage = ChatMessage(id: UUID(1), text: "Hello Again!", role: .user, date: date)
+    let nextDayDate = userMessage.date.addingTimeInterval(60 * 60 * 24)
+    store.dependencies.date.now = nextDayDate
+    
+    let secondAIResponse = ChatMessage(id: UUID(3), text: "Hello there!", role: .ai, date: nextDayDate)
+    store.dependencies.aiClient.sendMessage = { _ in
+      secondAIResponse
+    }
+    
+    let secondUserMessage = ChatMessage(id: UUID(1), text: "Hello Again!", role: .user, date: nextDayDate, displayingDate: true)
     
     await store.send(.sendMessageButtonPressed) {
       $0.messages = [userMessage, aiResponse, secondUserMessage]
@@ -56,9 +74,11 @@ struct ChatTests {
     
     await store.receive(\.aiResponse.success) {
       $0.isTyping = false
-      $0.messages = [userMessage, aiResponse, secondUserMessage, aiResponse]
+      $0.messages = [userMessage, aiResponse, secondUserMessage, secondAIResponse]
     }
-    await store.receive(\.scrollToBottom)
+    await store.receive(\.scrollToBottom) {
+      $0.scrollPosition = secondAIResponse.id
+    }
   }
   
   @Test func emptyMessageIsNotSent() async throws {
@@ -140,9 +160,9 @@ extension ChatTests {
       reducer: { Chat() },
       withDependencies: {
         $0.uuid = .incrementing
+        $0.continuousClock = .immediate
         $0.date.now = date
         $0.aiClient.sendMessage = sendMessage
-        $0.continuousClock = .immediate
       },
       fileID: fileID,
       file: filePath,
