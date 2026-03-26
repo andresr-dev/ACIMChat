@@ -9,24 +9,20 @@ import ComposableArchitecture
 
 @Reducer
 public struct ChatListFeature {
-  @Reducer
-  public enum Destination {
-    case detail(ChatFeature)
-  }
   
   @ObservableState
   public struct State {
-    @Presents public var destination: Destination.State?
+    @Presents public var detail: ChatFeature.State?
     public var chats: IdentifiedArrayOf<Chat>
     
-    public init(chats: IdentifiedArrayOf<Chat> = [], destination: Destination.State? = nil) {
+    public init(chats: IdentifiedArrayOf<Chat> = [], detail: ChatFeature.State? = nil) {
       self.chats = chats
-      self.destination = destination
+      self.detail = detail
     }
   }
   
   public enum Action {
-    case destination(PresentationAction<Destination.Action>)
+    case detail(PresentationAction<ChatFeature.Action>)
     case chatSelected(Chat)
   }
   
@@ -35,16 +31,16 @@ public struct ChatListFeature {
   public var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
-      case .destination:
+      case .detail:
         return .none
         
       case let .chatSelected(chat):
-        state.destination = .detail(
-          ChatFeature.State(chat: chat)
-        )
+        state.detail = ChatFeature.State(chat: chat)
         return .none
       }
     }
-    .ifLet(\.$destination, action: \.destination)
+    .ifLet(\.$detail, action: \.detail) {
+      ChatFeature()
+    }
   }
 }

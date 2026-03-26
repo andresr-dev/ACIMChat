@@ -25,7 +25,7 @@ struct ChatListView: View {
       }
       .navigationTitle("Conversaciones")
       .navigationDestination(
-        item: $store.scope(state: \.destination?.detail, action: \.destination.detail)) { store in
+        item: $store.scope(state: \.detail, action: \.detail)) { store in
           ChatView(store: store)
         }
     }
