@@ -22,8 +22,8 @@ struct ChatTests {
   }
   
   @Test func basicChatFlow() async throws {
-    let store = TestStore(initialState: Chat.State()) {
-      Chat()
+    let store = TestStore(initialState: ChatFeature.State()) {
+      ChatFeature()
     } withDependencies: {
       $0.uuid = .incrementing
       $0.continuousClock = .immediate
@@ -132,7 +132,7 @@ struct ChatTests {
     
     await store.receive(\.aiResponse) {
       $0.isTyping = false
-      $0.alert = Chat.errorAlert
+      $0.alert = ChatFeature.errorAlert
     }
     await store.receive(\.scrollToBottom) {
       $0.scrollPosition = userMessage.id
@@ -152,12 +152,12 @@ extension ChatTests {
     file filePath: StaticString = #filePath,
     line: UInt = #line,
     column: UInt = #column
-  ) -> TestStore<Chat.State, Chat.Action> {
+  ) -> TestStore<ChatFeature.State, ChatFeature.Action> {
     TestStore(
-      initialState: Chat.State(
+      initialState: ChatFeature.State(
         messages: messages,
         text: text),
-      reducer: { Chat() },
+      reducer: { ChatFeature() },
       withDependencies: {
         $0.uuid = .incrementing
         $0.continuousClock = .immediate

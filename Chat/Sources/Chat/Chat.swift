@@ -1,115 +1,59 @@
+//
+//  Chat.swift
+//  ChatUI
+//
+//  Created by Andres Raigoza on 14/03/26.
+//
 
-import ComposableArchitecture
 import Foundation
 
-@Reducer
-public struct Chat {
-  @ObservableState
-  public struct State: Equatable {
-    public var messages: [ChatMessage]
-    public var text: String
-    public var focusedField = false
-    public var isTyping = false
-    public var scrollPosition: UUID?
-    @Presents public var alert: AlertState<Action.Alert>?
-    
-    public var isShowingSendButton: Bool {
-      !text.isEmpty
-    }
-    
-    public init(messages: [ChatMessage] = [], text: String = "") {
-      self.messages = messages
-      self.text = text
-    }
-  }
+public struct Chat: Equatable, Identifiable {
+  public let id: UUID
+  public let title: String
+  public let messages: [ChatMessage]
   
-  public enum Action: BindableAction {
-    case binding(BindingAction<State>)
-    case onAppear
-    case startScrollDelay
-    case scrollToBottom
-    case sendMessageButtonPressed
-    case aiResponse(Result<ChatMessage, Error>)
-    case alert(PresentationAction<Alert>)
-    
-    @CasePathable
-    public enum Alert: Equatable, Sendable { }
-  }
-  
-  public init() { }
-  
-  @Dependency(\.aiClient) var aiClient
-  @Dependency(\.uuid) var uuid
-  @Dependency(\.date.now) var now
-  @Dependency(\.continuousClock) var clock
-  
-  public var body: some ReducerOf<Self> {
-    BindingReducer()
-    
-    Reduce { state, action in
-      switch action {
-      case .onAppear:
-        state.focusedField = state.messages.isEmpty
-        return .none
-        
-      case .startScrollDelay:
-        return .run { [clock] send in
-          try await clock.sleep(for: .seconds(0.2))
-          await send(.scrollToBottom, animation: .default)
-        }
-        
-      case .scrollToBottom:
-        state.scrollPosition = state.messages.last?.id
-        return .none
-        
-      case .sendMessageButtonPressed:
-        guard !state.text.isEmpty else { return .none }
-        let text = state.text
-        var displayingDate = state.messages.isEmpty
-        if let lastMessageDate = state.messages.last?.date {
-          displayingDate = !Calendar.current.isDate(now, inSameDayAs: lastMessageDate)
-        }
-        let message = ChatMessage(id: uuid(), text: text, role: .user, date: now, displayingDate: displayingDate)
-        state.messages.append(message)
-        state.isTyping = true
-        state.text = ""
-        let messages = Array(state.messages.suffix(11))
-        
-        return .run { [aiClient] send in
-          await send(.startScrollDelay)
-          await send(.aiResponse(Result {
-            try await aiClient.sendMessage(messages)
-          }))
-        }
-        
-      case let .aiResponse(result):
-        state.isTyping = false
-        
-        switch result {
-        case let .success(message):
-          let lastScrolledID = state.messages.last?.id
-          state.messages.append(message)
-          return .run { [scrollPosition = state.scrollPosition] send in
-            guard scrollPosition == lastScrolledID else { return }
-            await send(.startScrollDelay)
-          }
-        case .failure:
-          state.alert = Self.errorAlert
-          return .none
-        }
-        
-      case .binding, .alert:
-        return .none
-      }
-    }
-    .ifLet(\.$alert, action: \.alert)
+  public init(id: UUID = UUID(), title: String = "", messages: [ChatMessage]) {
+    self.id = id
+    self.title = title
+    self.messages = messages
   }
 }
 
-extension Chat {
-  static let errorAlert = AlertState<Action.Alert> {
-    TextState("Error")
-  } message: {
-    TextState("Por favor espera un momento e intenta de nuevo.")
+public struct ChatMessage: Equatable, Identifiable, Sendable {
+  public let id: UUID
+  public let text: String
+  public let role: Role
+  public let date: Date
+  public let displayingDate: Bool
+  
+  public enum Role: String, Sendable {
+    case user
+    case ai = "assistant"
   }
+  
+  public init(id: UUID = UUID(), text: String, role: Role, date: Date = Date(), displayingDate: Bool = false) {
+    self.id = id
+    self.text = text
+    self.role = role
+    self.date = date
+    self.displayingDate = displayingDate
+  }
+}
+
+extension ChatMessage {
+  public static let mock = [
+    ChatMessage(text: "This is a question in the chat, this is a question in the chat", role: .user),
+    ChatMessage(text: "This is an answer from the AI, this is an answer from the AI", role: .ai),
+    ChatMessage(text: "This is another question in the chat, this is another question in the chat", role: .user),
+    ChatMessage(text: "This is another answer from the AI, this is an answer from the AI", role: .ai),
+    ChatMessage(text: "This is yet another question in the chat, this is yet another question in the chat", role: .user),
+    ChatMessage(text: "This is yet another answer in the chat from AI, this is an answer from the AI", role: .ai),
+    ChatMessage(text: "This is a question in the chat, this is a question in the chat", role: .user),
+    ChatMessage(text: "This is an answer from the AI, this is an answer from the AI", role: .ai),
+    ChatMessage(text: "This is another question in the chat, this is another question in the chat", role: .user),
+    ChatMessage(text: "This is another answer from the AI, this is an answer from the AI", role: .ai),
+    ChatMessage(text: "This is yet another question in the chat, this is yet another question in the chat", role: .user),
+    ChatMessage(text: "This is the last AI answer", role: .ai),
+    ChatMessage(text: "This is the last question", role: .user),
+  ]
 }
