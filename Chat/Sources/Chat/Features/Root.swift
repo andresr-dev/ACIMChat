@@ -1,5 +1,5 @@
 //
-//  RootFeature.swift
+//  Root.swift
 //  Chat
 //
 //  Created by Andres Raigoza on 26/03/26.
@@ -8,18 +8,18 @@
 import ComposableArchitecture
 
 @Reducer
-public struct RootFeature {
+public struct Root {
   @Reducer
   public enum Path {
-    case chat(ChatFeature)
+    case chat(Chat)
   }
   
   @ObservableState
   public struct State {
     public var path: StackState<Path.State>
-    public var chatList: ChatListFeature.State
+    public var chatList: ChatList.State
     
-    public init(path: StackState<Path.State> = StackState(), chatList: ChatListFeature.State = ChatListFeature.State()) {
+    public init(path: StackState<Path.State> = StackState(), chatList: ChatList.State = ChatList.State()) {
       self.path = path
       self.chatList = chatList
     }
@@ -27,14 +27,14 @@ public struct RootFeature {
   
   public enum Action {
     case path(StackActionOf<Path>)
-    case chatList(ChatListFeature.Action)
+    case chatList(ChatList.Action)
   }
   
   public init() { }
   
   public var body: some ReducerOf<Self> {
     Scope(state: \.chatList, action: \.chatList) {
-      ChatListFeature()
+      ChatList()
     }
     
     Reduce { state, action in
@@ -45,7 +45,7 @@ public struct RootFeature {
       case let .chatList(chatListAction):
         switch chatListAction {
         case .chatSelected(let chat):
-          state.path.append(.chat(ChatFeature.State(chat: chat)))
+          state.path.append(.chat(Chat.State(chat: chat)))
           return .none
         }
       }

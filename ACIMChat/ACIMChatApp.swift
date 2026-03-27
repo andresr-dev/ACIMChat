@@ -14,8 +14,8 @@ import ComposableArchitecture
 struct ACIMChatApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
   
-  @State private var store = Store(initialState: ChatFeature.State()) {
-    ChatFeature()
+  @State private var store = Store(initialState: Chat.State()) {
+    Chat()
   }
   
   var body: some Scene {

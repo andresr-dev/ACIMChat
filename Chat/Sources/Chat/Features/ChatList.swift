@@ -1,5 +1,5 @@
 //
-//  ChatListFeature.swift
+//  ChatList.swift
 //  Chat
 //
 //  Created by Andres Raigoza on 25/03/26.
@@ -8,19 +8,19 @@
 import ComposableArchitecture
 
 @Reducer
-public struct ChatListFeature {
+public struct ChatList {
   
   @ObservableState
   public struct State {
-    public var chats: IdentifiedArrayOf<Chat>
+    public var chats: IdentifiedArrayOf<ChatModel>
     
-    public init(chats: IdentifiedArrayOf<Chat> = []) {
+    public init(chats: IdentifiedArrayOf<ChatModel> = []) {
       self.chats = chats
     }
   }
   
   public enum Action {
-    case chatSelected(Chat)
+    case chatSelected(ChatModel)
   }
   
   public init() { }

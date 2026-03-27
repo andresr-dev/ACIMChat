@@ -10,7 +10,7 @@ import Chat
 import SwiftUI
 
 struct ChatListView: View {
-  @Bindable var store: StoreOf<ChatListFeature>
+  @Bindable var store: StoreOf<ChatList>
   
   var body: some View {
     List {
@@ -30,15 +30,15 @@ struct ChatListView: View {
   NavigationStack {
     ChatListView(
       store: Store(
-        initialState: ChatListFeature.State(
+        initialState: ChatList.State(
           chats: [
-            Chat(title: "Chat 1", messages: ChatMessage.mock),
-            Chat(title: "Chat 2", messages: ChatMessage.mock),
-            Chat(title: "Chat 3", messages: ChatMessage.mock)
+            ChatModel(title: "Chat 1", messages: ChatMessage.mock),
+            ChatModel(title: "Chat 2", messages: ChatMessage.mock),
+            ChatModel(title: "Chat 3", messages: ChatMessage.mock)
           ]
         )
       ) {
-        ChatListFeature()
+        ChatList()
       }
     )
   }

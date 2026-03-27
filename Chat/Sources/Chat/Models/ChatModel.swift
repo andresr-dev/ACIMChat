@@ -1,5 +1,5 @@
 //
-//  Chat.swift
+//  ChatModel.swift
 //  ChatUI
 //
 //  Created by Andres Raigoza on 14/03/26.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Chat: Equatable, Identifiable {
+public struct ChatModel: Equatable, Identifiable {
   public let id: UUID
   public let title: String
   public let messages: [ChatMessage]

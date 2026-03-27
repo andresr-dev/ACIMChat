@@ -10,7 +10,7 @@ import ComposableArchitecture
 import SwiftUI
 
 struct RootView: View {
-  @Bindable var store: StoreOf<RootFeature>
+  @Bindable var store: StoreOf<Root>
   
   var body: some View {
     NavigationStack(
@@ -28,17 +28,17 @@ struct RootView: View {
 #Preview {
   RootView(
     store: Store(
-      initialState: RootFeature.State(
-        path: StackState([.chat(ChatFeature.State(chat: Chat(title: "Chat 3", messages: ChatMessage.mock)))]),
-        chatList: ChatListFeature.State(
+      initialState: Root.State(
+        path: StackState([.chat(Chat.State(chat: ChatModel(title: "Chat 3", messages: ChatMessage.mock)))]),
+        chatList: ChatList.State(
           chats: [
-            Chat(title: "Chat 1", messages: ChatMessage.mock),
-            Chat(title: "Chat 2", messages: ChatMessage.mock),
-            Chat(title: "Chat 3", messages: ChatMessage.mock)
+            ChatModel(title: "Chat 1", messages: ChatMessage.mock),
+            ChatModel(title: "Chat 2", messages: ChatMessage.mock),
+            ChatModel(title: "Chat 3", messages: ChatMessage.mock)
           ]
         )
       )
     ) {
-    RootFeature()
+    Root()
   })
 }

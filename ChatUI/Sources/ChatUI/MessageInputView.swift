@@ -10,7 +10,7 @@ import ComposableArchitecture
 import SwiftUI
 
 struct MessageInputView: View {
-  @Bindable var store: StoreOf<ChatFeature>
+  @Bindable var store: StoreOf<Chat>
   @FocusState var focusedField: Bool
   let buttonWidth = 40.0
   let buttonHeight = 30.0
@@ -53,9 +53,9 @@ struct MessageInputView: View {
 #Preview {
   MessageInputView(
     store: Store(
-      initialState: ChatFeature.State(text: "dfdf")
+      initialState: Chat.State(text: "dfdf")
     ) {
-      ChatFeature()
+      Chat()
     }
   )
   .padding()

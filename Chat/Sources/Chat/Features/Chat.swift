@@ -3,7 +3,7 @@ import ComposableArchitecture
 import Foundation
 
 @Reducer
-public struct ChatFeature {
+public struct Chat {
   @ObservableState
   public struct State: Equatable {
     public var messages: [ChatMessage]
@@ -17,12 +17,12 @@ public struct ChatFeature {
       !text.isEmpty
     }
     
-    public init(chat: Chat = Chat(messages: []), text: String = "") {
+    public init(chat: ChatModel = ChatModel(messages: []), text: String = "") {
       self.messages = chat.messages
       self.text = text
     }
     
-    public init(chat: Chat) {
+    public init(chat: ChatModel) {
       self.messages = chat.messages
     }
   }
@@ -110,7 +110,7 @@ public struct ChatFeature {
   }
 }
 
-extension ChatFeature {
+extension Chat {
   static let errorAlert = AlertState<Action.Alert> {
     TextState("Error")
   } message: {

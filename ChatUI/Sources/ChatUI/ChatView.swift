@@ -10,9 +10,9 @@ import ComposableArchitecture
 import SwiftUI
 
 public struct ChatView: View {
-  @Bindable var store: StoreOf<ChatFeature>
+  @Bindable var store: StoreOf<Chat>
   
-  public init(store: StoreOf<ChatFeature>) {
+  public init(store: StoreOf<Chat>) {
     self.store = store
   }
   
@@ -52,8 +52,8 @@ public struct ChatView: View {
 
 #Preview {
   ChatView(
-    store: Store(initialState: ChatFeature.State()) {
-      ChatFeature()
+    store: Store(initialState: Chat.State()) {
+      Chat()
     }
   )
 }
