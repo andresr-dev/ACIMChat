@@ -9,10 +9,14 @@ import Chat
 import ComposableArchitecture
 import SwiftUI
 
-struct RootView: View {
+public struct RootView: View {
   @Bindable var store: StoreOf<Root>
   
-  var body: some View {
+  public init(store: StoreOf<Root>) {
+    self.store = store
+  }
+  
+  public var body: some View {
     NavigationStack(
       path: $store.scope(state: \.path, action: \.path)) {
         ChatListView(store: store.scope(state: \.chatList, action: \.chatList))

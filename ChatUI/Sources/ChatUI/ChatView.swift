@@ -46,14 +46,18 @@ public struct ChatView: View {
         .background()
         .ignoresSafeArea()
     }
+    .navigationTitle("UCDM")
+    .navigationBarTitleDisplayMode(.inline)
     .alert($store.scope(state: \.alert, action: \.alert))
   }
 }
 
 #Preview {
-  ChatView(
-    store: Store(initialState: Chat.State()) {
-      Chat()
-    }
-  )
+  NavigationStack {
+    ChatView(
+      store: Store(initialState: Chat.State()) {
+        Chat()
+      }
+    )
+  }
 }

@@ -14,13 +14,13 @@ import ComposableArchitecture
 struct ACIMChatApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
   
-  @State private var store = Store(initialState: Chat.State()) {
-    Chat()
+  @State private var store = Store(initialState: Root.State()) {
+    Root()
   }
   
   var body: some Scene {
     WindowGroup {
-      ChatView(store: store)
+      RootView(store: store)
     }
   }
 }

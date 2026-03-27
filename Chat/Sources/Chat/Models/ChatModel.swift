@@ -12,7 +12,7 @@ public struct ChatModel: Equatable, Identifiable {
   public let title: String
   public let messages: [ChatMessage]
   
-  public init(id: UUID = UUID(), title: String = "", messages: [ChatMessage]) {
+  public init(id: UUID = UUID(), title: String = "", messages: [ChatMessage] = []) {
     self.id = id
     self.title = title
     self.messages = messages

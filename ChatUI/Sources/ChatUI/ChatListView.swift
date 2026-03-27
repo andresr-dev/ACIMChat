@@ -18,15 +18,37 @@ struct ChatListView: View {
         Button {
           store.send(.chatSelected(chat))
         } label: {
-          Text(chat.title)
+          HStack {
+            Text(chat.title)
+            Spacer()
+            Image(systemName: "chevron.right")
+              .font(.callout)
+              .foregroundStyle(.secondary)
+          }
         }
+        .foregroundStyle(.primary)
       }
     }
     .navigationTitle("Chats")
+    .onAppear {
+      store.send(.onAppear)
+    }
   }
 }
 
-#Preview {
+#Preview("Empty history") {
+  NavigationStack {
+    ChatListView(
+      store: Store(
+        initialState: ChatList.State()
+      ) {
+        ChatList()
+      }
+    )
+  }
+}
+
+#Preview("Chat history") {
   NavigationStack {
     ChatListView(
       store: Store(

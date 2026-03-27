@@ -13,29 +13,16 @@ import Synchronization
 
 @MainActor
 struct ChatTests {
-  let date = Date(timeIntervalSince1970: 1234567890)
-  var userMessage: ChatMessage {
-    ChatMessage(id: UUID(0), text: "Hello!", role: .user, date: date, displayingDate: true)
-  }
-  var aiResponse: ChatMessage {
-    ChatMessage(id: UUID(2), text: "Hello there!", role: .ai, date: date)
-  }
   
   @Test func basicChatFlow() async throws {
-    let store = TestStore(initialState: Chat.State()) {
-      Chat()
-    } withDependencies: {
-      $0.uuid = .incrementing
-      $0.continuousClock = .immediate
-      $0.date.now = date
-      $0.aiClient.sendMessage = { [aiResponse] _ in
-        aiResponse
-      }
-    }
+    let store = getStore()
     
     await store.send(.binding(.set(\.text, "Hello!"))) {
       $0.text = "Hello!"
     }
+    
+    let date = Date(timeIntervalSince1970: 1234567890)
+    let userMessage = ChatMessage(id: UUID(0), text: "Hello!", role: .user, date: date, displayingDate: true)
     
     await store.send(.sendMessageButtonPressed) {
       $0.messages = [userMessage]
@@ -43,6 +30,8 @@ struct ChatTests {
       $0.text = ""
     }
     await store.receive(\.startScrollDelay)
+    
+    let aiResponse = ChatMessage(id: UUID(2), text: "Hello there!", role: .ai, date: date)
     
     await store.receive(\.aiResponse.success) {
       $0.isTyping = false
@@ -123,6 +112,8 @@ struct ChatTests {
       $0.text = "Hello!"
     }
     
+    let userMessage = ChatMessage(id: UUID(0), text: "Hello!", role: .user, date: Date(timeIntervalSince1970: 1234567890), displayingDate: true)
+    
     await store.send(.sendMessageButtonPressed) {
       $0.messages = [userMessage]
       $0.isTyping = true
@@ -161,7 +152,7 @@ extension ChatTests {
       withDependencies: {
         $0.uuid = .incrementing
         $0.continuousClock = .immediate
-        $0.date.now = date
+        $0.date.now = Date(timeIntervalSince1970: 1234567890)
         $0.aiClient.sendMessage = sendMessage
       },
       fileID: fileID,

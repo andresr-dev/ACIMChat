@@ -7,6 +7,8 @@
 
 import ComposableArchitecture
 
+extension Root.Path.State: Equatable { }
+
 @Reducer
 public struct Root {
   @Reducer
@@ -15,9 +17,10 @@ public struct Root {
   }
   
   @ObservableState
-  public struct State {
+  public struct State: Equatable {
     public var path: StackState<Path.State>
     public var chatList: ChatList.State
+    var onAppearPerformed = false
     
     public init(path: StackState<Path.State> = StackState(), chatList: ChatList.State = ChatList.State()) {
       self.path = path
@@ -46,6 +49,15 @@ public struct Root {
         switch chatListAction {
         case .chatSelected(let chat):
           state.path.append(.chat(Chat.State(chat: chat)))
+          return .none
+        case .onAppear:
+          guard !state.onAppearPerformed else {
+            return .none
+          }
+          state.onAppearPerformed = true
+          if state.chatList.chats.count == 1, let chat = state.chatList.chats.first {
+            state.path.append(.chat(Chat.State(chat: chat)))
+          }
           return .none
         }
       }
