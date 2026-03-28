@@ -42,12 +42,16 @@ public struct Root {
     
     Reduce { state, action in
       switch action {
+      case let .path(.element(id: _, action: .chat(.delegate(.chatUpdated(chat))))):
+        state.chatList.chats[id: chat.id] = chat
+        return .none
+        
       case .path:
         return .none
         
       case let .chatList(chatListAction):
         switch chatListAction {
-        case .chatSelected(let chat):
+        case let .chatSelected(chat):
           state.path.append(.chat(Chat.State(chat: chat)))
           return .none
         case .onAppear:

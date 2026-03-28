@@ -20,11 +20,11 @@ public struct ChatView: View {
     VStack(spacing: 0) {
       ScrollView {
         LazyVStack(spacing: 12) {
-          ForEach(store.messages) { message in
+          ForEach(store.chat.messages) { message in
             VStack(alignment: .leading, spacing: 12) {
               MessageView(message: message)
               
-              if store.messages.last == message, store.isTyping {
+              if store.chat.messages.last == message, store.isTyping {
                 TypingIndicator()
                   .transition(.identity)
               }

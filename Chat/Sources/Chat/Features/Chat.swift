@@ -6,8 +6,8 @@ import Foundation
 public struct Chat {
   @ObservableState
   public struct State: Equatable {
-    public var messages: [ChatMessage]
-    public var text: String = ""
+    public var chat: ChatModel
+    public var text: String
     public var focusedField = false
     public var isTyping = false
     public var scrollPosition: UUID?
@@ -18,12 +18,8 @@ public struct Chat {
     }
     
     public init(chat: ChatModel = ChatModel(messages: []), text: String = "") {
-      self.messages = chat.messages
+      self.chat = chat
       self.text = text
-    }
-    
-    public init(chat: ChatModel) {
-      self.messages = chat.messages
     }
   }
   
@@ -35,9 +31,14 @@ public struct Chat {
     case sendMessageButtonPressed
     case aiResponse(Result<ChatMessage, Error>)
     case alert(PresentationAction<Alert>)
+    case delegate(Delegate)
+    
+    public enum Alert: Equatable, Sendable { }
     
     @CasePathable
-    public enum Alert: Equatable, Sendable { }
+    public enum Delegate: Equatable {
+      case chatUpdated(ChatModel)
+    }
   }
   
   public init() { }
@@ -53,7 +54,7 @@ public struct Chat {
     Reduce { state, action in
       switch action {
       case .onAppear:
-        state.focusedField = state.messages.isEmpty
+        state.focusedField = state.chat.messages.isEmpty
         return .none
         
       case .startScrollDelay:
@@ -63,21 +64,21 @@ public struct Chat {
         }
         
       case .scrollToBottom:
-        state.scrollPosition = state.messages.last?.id
+        state.scrollPosition = state.chat.messages.last?.id
         return .none
         
       case .sendMessageButtonPressed:
         guard !state.text.isEmpty else { return .none }
         let text = state.text
-        var displayingDate = state.messages.isEmpty
-        if let lastMessageDate = state.messages.last?.date {
+        var displayingDate = state.chat.messages.isEmpty
+        if let lastMessageDate = state.chat.messages.last?.date {
           displayingDate = !Calendar.current.isDate(now, inSameDayAs: lastMessageDate)
         }
         let message = ChatMessage(id: uuid(), text: text, role: .user, date: now, displayingDate: displayingDate)
-        state.messages.append(message)
+        state.chat.messages.append(message)
         state.isTyping = true
         state.text = ""
-        let messages = Array(state.messages.suffix(11))
+        let messages = Array(state.chat.messages.suffix(11))
         
         return .run { [aiClient] send in
           await send(.startScrollDelay)
@@ -91,8 +92,8 @@ public struct Chat {
         
         switch result {
         case let .success(message):
-          let lastScrolledID = state.messages.last?.id
-          state.messages.append(message)
+          let lastScrolledID = state.chat.messages.last?.id
+          state.chat.messages.append(message)
           return .run { [scrollPosition = state.scrollPosition] send in
             guard scrollPosition == lastScrolledID else { return }
             await send(.startScrollDelay)
@@ -102,11 +103,14 @@ public struct Chat {
           return .none
         }
         
-      case .binding, .alert:
+      case .binding, .alert, .delegate:
         return .none
       }
     }
     .ifLet(\.$alert, action: \.alert)
+    .onChange(of: \.chat) { oldValue, state in
+        .send(.delegate(.chatUpdated(state.chat)))
+    }
   }
 }
 

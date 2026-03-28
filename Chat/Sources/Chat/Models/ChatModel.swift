@@ -9,8 +9,8 @@ import Foundation
 
 public struct ChatModel: Equatable, Identifiable {
   public let id: UUID
-  public let title: String
-  public let messages: [ChatMessage]
+  public var title: String
+  public var messages: [ChatMessage]
   
   public init(id: UUID = UUID(), title: String = "", messages: [ChatMessage] = []) {
     self.id = id

@@ -25,18 +25,20 @@ struct ChatTests {
     let userMessage = ChatMessage(id: UUID(0), text: "Hello!", role: .user, date: date, displayingDate: true)
     
     await store.send(.sendMessageButtonPressed) {
-      $0.messages = [userMessage]
+      $0.chat.messages = [userMessage]
       $0.isTyping = true
       $0.text = ""
     }
+    
+    await store.receive(\.delegate)
     await store.receive(\.startScrollDelay)
     
     let aiResponse = ChatMessage(id: UUID(2), text: "Hello there!", role: .ai, date: date)
-    
     await store.receive(\.aiResponse.success) {
       $0.isTyping = false
-      $0.messages = [userMessage, aiResponse]
+      $0.chat.messages = [userMessage, aiResponse]
     }
+    await store.receive(\.delegate)
     await store.receive(\.scrollToBottom) {
       $0.scrollPosition = aiResponse.id
     }
@@ -55,16 +57,18 @@ struct ChatTests {
     let secondUserMessage = ChatMessage(id: UUID(1), text: "Hello Again!", role: .user, date: nextDayDate, displayingDate: true)
     
     await store.send(.sendMessageButtonPressed) {
-      $0.messages = [userMessage, aiResponse, secondUserMessage]
+      $0.chat.messages = [userMessage, aiResponse, secondUserMessage]
       $0.isTyping = true
       $0.text = ""
     }
+    await store.receive(\.delegate)
     await store.receive(\.startScrollDelay)
     
     await store.receive(\.aiResponse.success) {
       $0.isTyping = false
-      $0.messages = [userMessage, aiResponse, secondUserMessage, secondAIResponse]
+      $0.chat.messages = [userMessage, aiResponse, secondUserMessage, secondAIResponse]
     }
+    await store.receive(\.delegate)
     await store.receive(\.scrollToBottom) {
       $0.scrollPosition = secondAIResponse.id
     }
@@ -115,10 +119,13 @@ struct ChatTests {
     let userMessage = ChatMessage(id: UUID(0), text: "Hello!", role: .user, date: Date(timeIntervalSince1970: 1234567890), displayingDate: true)
     
     await store.send(.sendMessageButtonPressed) {
-      $0.messages = [userMessage]
+      $0.chat.messages = [userMessage]
       $0.isTyping = true
       $0.text = ""
     }
+    
+    await store.receive(\.delegate)
+    
     await store.receive(\.startScrollDelay)
     
     await store.receive(\.aiResponse) {
