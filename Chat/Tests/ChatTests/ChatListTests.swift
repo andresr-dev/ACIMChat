@@ -27,7 +27,7 @@ struct ChatListTests {
     await store.send(\.onAppear)
   }
   
-  @Test func addsNewChatOnPressingPlusButton() async throws {
+  @Test func addsNewChatToTopOnPressingPlusButton() async throws {
     let chat = ChatModel.mock
     let store = getStore(chats: [chat])
         

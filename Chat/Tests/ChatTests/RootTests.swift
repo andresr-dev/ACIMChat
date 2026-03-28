@@ -13,7 +13,7 @@ import Testing
 @MainActor
 struct RootTests {
   
-  @Test func navigatesToChatONOnlyOneExistingChat() async throws {
+  @Test func navigatesToFirstChatOnAppear() async throws {
     let store = TestStore(initialState: Root.State()) {
       Root()
     } withDependencies: {
@@ -47,7 +47,7 @@ struct RootTests {
       Root()
     } withDependencies: {
       $0.uuid = .incrementing
-      $0.date.now = Date(timeIntervalSince1970: 0)
+      $0.date.now = date
       $0.continuousClock = .immediate
       $0.aiClient.sendMessage = { _ in
         aiMessage
@@ -100,5 +100,41 @@ struct RootTests {
     await store.send(.chatList(.chatSelected(updatedChat))) {
       $0.path[id: 1] = .chat(Chat.State(chat: updatedChat))
     }
+  }
+  
+  @Test func updatedChatMovesToTop() async throws {
+    let date = Date(timeIntervalSince1970: 0)
+    let chat1 = ChatModel(id: UUID(0), title: "Test Chat")
+    let chat2 = ChatModel(id: UUID(1), title: "Test Chat 2")
+    let aiMessage = ChatMessage(id: UUID(2), text: "AI response", role: .ai, date: date)
+    
+    let store = TestStore(
+      initialState: Root.State(
+        chatList: ChatList.State(chats: [chat1, chat2])
+      )
+    ) {
+      Root()
+    } withDependencies: {
+      $0.uuid = .incrementing
+      $0.date.now = date
+      $0.continuousClock = .immediate
+      $0.aiClient.sendMessage = { _ in
+        aiMessage
+      }
+    }
+    store.exhaustivity = .off
+    
+    await store.send(.chatList(.chatSelected(chat2)))
+    await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello"))))))
+    
+    let userMessage = ChatMessage(id: UUID(0), text: "Hello", role: .user, date: date, displayingDate: true)
+    await store.send(.path(.element(id: 0, action: .chat(.sendMessageButtonPressed))))
+    
+    var updatedChat2 = chat2
+    updatedChat2.messages = [userMessage]
+    await store.receive(\.path[id: 0].chat.delegate.chatUpdated) {
+      $0.chatList.chats = [updatedChat2, chat1]
+    }
+    await store.skipReceivedActions()
   }
 }

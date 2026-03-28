@@ -6,6 +6,7 @@
 //
 
 import ComposableArchitecture
+import Foundation
 
 extension Root.Path.State: Equatable { }
 
@@ -46,6 +47,9 @@ public struct Root {
       switch action {
       case let .path(.element(id: _, action: .chat(.delegate(.chatUpdated(chat))))):
         state.chatList.chats[id: chat.id] = chat
+        if let index = state.chatList.chats.index(id: chat.id) {
+          state.chatList.chats.move(fromOffsets: IndexSet(integer: index), toOffset: 0)
+        }
         return .none
         
       case .chatList(.onAppear):
