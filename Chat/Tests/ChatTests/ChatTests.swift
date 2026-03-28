@@ -88,12 +88,17 @@ struct ChatTests {
     await store.send(\.onAppear) {
       $0.focusedField = true
     }
+    
+    await store.receive(\.scrollToBottom)
   }
   
   @Test func fieldIsNotFocusedWhenViewAppearsWithChatNotEmpty() async throws {
     let store = getStore(messages: ChatMessage.mock)
     
     await store.send(\.onAppear)
+    await store.receive(\.scrollToBottom) {
+      $0.scrollPosition = ChatMessage.mock.last!.id
+    }
   }
   
   @Test func sendButtonIsVisibleWhenViewAppearsWithTextFieldPopulated() async throws {
@@ -102,6 +107,7 @@ struct ChatTests {
     await store.send(\.onAppear) {
       $0.focusedField = true
     }
+    await store.receive(\.scrollToBottom)
   }
   
   @Test func presentsAlertOnAIResponseError() async throws {

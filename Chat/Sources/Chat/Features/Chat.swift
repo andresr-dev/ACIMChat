@@ -55,7 +55,7 @@ public struct Chat {
       switch action {
       case .onAppear:
         state.focusedField = state.chat.messages.isEmpty
-        return .none
+        return .send(.scrollToBottom)
         
       case .startScrollDelay:
         return .run { [clock] send in
