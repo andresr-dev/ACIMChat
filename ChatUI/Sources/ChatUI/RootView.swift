@@ -33,13 +33,8 @@ public struct RootView: View {
   RootView(
     store: Store(
       initialState: Root.State(
-        path: StackState([.chat(Chat.State(chat: ChatModel(title: "Chat 3", messages: ChatMessage.mock)))]),
         chatList: ChatList.State(
-          chats: [
-            ChatModel(title: "Chat 1", messages: ChatMessage.mock),
-            ChatModel(title: "Chat 2", messages: ChatMessage.mock),
-            ChatModel(title: "Chat 3", messages: ChatMessage.mock)
-          ]
+          chats: [.mock]
         )
       )
     ) {

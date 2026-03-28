@@ -33,6 +33,8 @@ public struct Root {
     case chatList(ChatList.Action)
   }
   
+  @Dependency(\.uuid) var uuid
+  
   public init() { }
   
   public var body: some ReducerOf<Self> {
@@ -46,24 +48,22 @@ public struct Root {
         state.chatList.chats[id: chat.id] = chat
         return .none
         
-      case .path:
-        return .none
-        
-      case let .chatList(chatListAction):
-        switch chatListAction {
-        case let .chatSelected(chat):
-          state.path.append(.chat(Chat.State(chat: chat)))
-          return .none
-        case .onAppear:
-          guard !state.onAppearPerformed else {
-            return .none
-          }
-          state.onAppearPerformed = true
-          if state.chatList.chats.count == 1, let chat = state.chatList.chats.first {
-            state.path.append(.chat(Chat.State(chat: chat)))
-          }
+      case .chatList(.onAppear):
+        guard !state.onAppearPerformed else {
           return .none
         }
+        state.onAppearPerformed = true
+        if state.chatList.chats.count == 1, let chat = state.chatList.chats.first {
+          state.path.append(.chat(Chat.State(chat: chat)))
+        }
+        return .none
+        
+      case let .chatList(.chatSelected(chat)):
+        state.path.append(.chat(Chat.State(chat: chat)))
+        return .none
+        
+      case .path, .chatList:
+        return .none
       }
     }
     .forEach(\.path, action: \.path)

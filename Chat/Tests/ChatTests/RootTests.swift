@@ -13,7 +13,7 @@ import Testing
 @MainActor
 struct RootTests {
   
-  @Test func basicFlow() async throws {
+  @Test func navigatesToChatONOnlyOneExistingChat() async throws {
     let store = TestStore(initialState: Root.State()) {
       Root()
     } withDependencies: {
@@ -29,7 +29,7 @@ struct RootTests {
     }
     
     await store.send(.path(.popFrom(id: 0))) {
-      $0.path.removeAll()
+      $0.path = StackState([])
     }
   }
   

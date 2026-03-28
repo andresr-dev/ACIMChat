@@ -30,6 +30,13 @@ struct ChatListView: View {
       }
     }
     .navigationTitle("Chats")
+    .toolbar {
+      ToolbarItem {
+        Button("Add", systemImage: "plus") {
+          store.send(.addChatButtonPressed, animation: .default)
+        }
+      }
+    }
     .onAppear {
       store.send(.onAppear)
     }

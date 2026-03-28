@@ -21,6 +21,7 @@ public struct ChatList {
   
   public enum Action {
     case onAppear
+    case addChatButtonPressed
     case chatSelected(ChatModel)
   }
   
@@ -37,6 +38,12 @@ public struct ChatList {
           state.chats.append(chat)
         }
         return .none
+        
+      case .addChatButtonPressed:
+        let chat = ChatModel(id: uuid(), title: "Nueva Conversación")
+        state.chats.append(chat)
+        return .none
+        
       case .chatSelected:
         return .none
       }

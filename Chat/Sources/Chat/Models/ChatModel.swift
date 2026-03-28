@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct ChatModel: Equatable, Identifiable {
+public struct ChatModel: Equatable, Identifiable, Sendable {
   public let id: UUID
   public var title: String
   public var messages: [ChatMessage]
@@ -16,6 +16,12 @@ public struct ChatModel: Equatable, Identifiable {
     self.id = id
     self.title = title
     self.messages = messages
+  }
+}
+
+public extension ChatModel {
+  static var mock: ChatModel {
+    ChatModel(title: "New Chat", messages: ChatMessage.mock)
   }
 }
 

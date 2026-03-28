@@ -22,15 +22,18 @@ struct ChatListTests {
   }
   
   @Test func doesNotAppendNewChatOnNonEmptyState() async throws {
-    let chats = IdentifiedArray(uniqueElements: [
-      ChatModel(id: UUID(0), title: "Chat 1"),
-      ChatModel(id: UUID(1), title: "Chat 2"),
-      ChatModel(id: UUID(2), title: "Chat 3")
-    ])
-    
-    let store = getStore(chats: chats)
+    let store = getStore(chats: [ChatModel(id: UUID(0), title: "New Chat")])
     
     await store.send(\.onAppear)
+  }
+  
+  @Test func addsNewChatOnPressingPlusButton() async throws {
+    let chat = ChatModel.mock
+    let store = getStore(chats: [chat])
+        
+    await store.send(.addChatButtonPressed) {
+      $0.chats = [chat, ChatModel(id: UUID(0), title: "Nueva Conversación")]
+    }
   }
 }
 
