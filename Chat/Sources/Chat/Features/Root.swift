@@ -32,9 +32,12 @@ public struct Root {
   public enum Action {
     case path(StackActionOf<Path>)
     case chatList(ChatList.Action)
+    case startFirstChatNavigationDelay
+    case navigateToFirstChat
   }
   
   @Dependency(\.uuid) var uuid
+  @Dependency(\.continuousClock) var clock
   
   public init() { }
   
@@ -64,6 +67,21 @@ public struct Root {
         
       case let .chatList(.chatSelected(chat)):
         state.path.append(.chat(Chat.State(chat: chat)))
+        return .none
+        
+      case .chatList(.addChatButtonPressed):
+        return .send(.startFirstChatNavigationDelay)
+        
+      case .startFirstChatNavigationDelay:
+        return .run { [clock] send in
+          try await clock.sleep(for: .seconds(0.5))
+          await send(.navigateToFirstChat)
+        }
+        
+      case .navigateToFirstChat:
+        state.chatList.chats.first.map {
+          state.path.append(.chat(Chat.State(chat: $0)))
+        }
         return .none
         
       case .path, .chatList:

@@ -137,4 +137,35 @@ struct RootTests {
     }
     await store.skipReceivedActions()
   }
+  
+  @Test func navigatesToFirstChatOnCreation() async throws {
+    let date = Date(timeIntervalSince1970: 0)
+    let chat = ChatModel(id: UUID(1), title: "Test Chat")
+    let aiMessage = ChatMessage(id: UUID(2), text: "AI response", role: .ai, date: date)
+    
+    let store = TestStore(
+      initialState: Root.State(
+        chatList: ChatList.State(chats: [chat])
+      )
+    ) {
+      Root()
+    } withDependencies: {
+      $0.uuid = .incrementing
+      $0.date.now = date
+      $0.continuousClock = .immediate
+      $0.aiClient.sendMessage = { _ in
+        aiMessage
+      }
+    }
+    
+    let newChat = ChatModel(id: UUID(0), title: "Nueva Conversación")
+    await store.send(.chatList(.addChatButtonPressed)) {
+      $0.chatList.chats = [newChat, chat]
+    }
+    
+    await store.receive(\.startFirstChatNavigationDelay)
+    await store.receive(\.navigateToFirstChat) {
+      $0.path[id: 0] = .chat(Chat.State(chat: newChat))
+    }
+  }
 }
