@@ -53,7 +53,7 @@ public struct Root {
           return .none
         }
         state.onAppearPerformed = true
-        if state.chatList.chats.count == 1, let chat = state.chatList.chats.first {
+        if let chat = state.chatList.chats.first {
           state.path.append(.chat(Chat.State(chat: chat)))
         }
         return .none

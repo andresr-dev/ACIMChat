@@ -32,7 +32,7 @@ struct ChatListTests {
     let store = getStore(chats: [chat])
         
     await store.send(.addChatButtonPressed) {
-      $0.chats = [chat, ChatModel(id: UUID(0), title: "Nueva Conversación")]
+      $0.chats = [ChatModel(id: UUID(0), title: "Nueva Conversación"), chat]
     }
   }
 }

@@ -41,7 +41,7 @@ public struct ChatList {
         
       case .addChatButtonPressed:
         let chat = ChatModel(id: uuid(), title: "Nueva Conversación")
-        state.chats.append(chat)
+        state.chats.insert(chat, at: 0)
         return .none
         
       case .chatSelected:
