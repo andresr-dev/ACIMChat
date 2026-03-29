@@ -136,7 +136,7 @@ struct ChatTests {
     
     await store.receive(\.aiResponse) {
       $0.isTyping = false
-      $0.alert = Chat.errorAlert
+      $0.alert = .error
     }
     await store.receive(\.scrollToBottom) {
       $0.scrollPosition = userMessage.id

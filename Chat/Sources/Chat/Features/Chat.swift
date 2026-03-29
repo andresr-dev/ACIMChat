@@ -99,7 +99,7 @@ public struct Chat {
             await send(.startScrollDelay)
           }
         case .failure:
-          state.alert = Self.errorAlert
+          state.alert = .error
           return .none
         }
         
@@ -114,8 +114,8 @@ public struct Chat {
   }
 }
 
-extension Chat {
-  static let errorAlert = AlertState<Action.Alert> {
+extension AlertState where Action == Chat.Action.Alert {
+  static let error = Self {
     TextState("Error")
   } message: {
     TextState("Por favor espera un momento e intenta de nuevo.")
