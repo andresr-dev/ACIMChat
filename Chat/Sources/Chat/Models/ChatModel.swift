@@ -9,19 +9,20 @@ import Foundation
 
 public struct ChatModel: Equatable, Identifiable, Sendable {
   public let id: UUID
-  public var title: String
   public var messages: [ChatMessage]
+  public var title: String {
+    messages.last?.text ?? "Nueva Conversación"
+  }
   
-  public init(id: UUID = UUID(), title: String = "", messages: [ChatMessage] = []) {
+  public init(id: UUID = UUID(), messages: [ChatMessage] = []) {
     self.id = id
-    self.title = title
     self.messages = messages
   }
 }
 
 public extension ChatModel {
   static var mock: ChatModel {
-    ChatModel(title: "New Chat", messages: ChatMessage.mock)
+    ChatModel(messages: ChatMessage.mock)
   }
 }
 
@@ -58,8 +59,7 @@ extension ChatMessage {
     ChatMessage(text: "This is an answer from the AI, this is an answer from the AI", role: .ai),
     ChatMessage(text: "This is another question in the chat, this is another question in the chat", role: .user),
     ChatMessage(text: "This is another answer from the AI, this is an answer from the AI", role: .ai),
-    ChatMessage(text: "This is yet another question in the chat, this is yet another question in the chat", role: .user),
-    ChatMessage(text: "This is the last AI answer", role: .ai),
-    ChatMessage(text: "This is the last question", role: .user),
+//    ChatMessage(text: "This is the last question", role: .user),
+//    ChatMessage(text: "This is the last AI answer", role: .ai)
   ]
 }

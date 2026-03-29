@@ -20,6 +20,7 @@ struct ChatListView: View {
         } label: {
           HStack {
             Text(chat.title)
+              .lineLimit(1)
             Spacer()
             Image(systemName: "chevron.right")
               .font(.callout)
@@ -61,9 +62,9 @@ struct ChatListView: View {
       store: Store(
         initialState: ChatList.State(
           chats: [
-            ChatModel(title: "Chat 1", messages: ChatMessage.mock),
-            ChatModel(title: "Chat 2", messages: ChatMessage.mock),
-            ChatModel(title: "Chat 3", messages: ChatMessage.mock)
+            ChatModel(messages: ChatMessage.mock),
+            ChatModel(messages: ChatMessage.mock),
+            ChatModel(messages: ChatMessage.mock)
           ]
         )
       ) {

@@ -34,13 +34,13 @@ public struct ChatList {
       switch action {
       case .onAppear:
         if state.chats.isEmpty {
-          let chat = ChatModel(id: uuid(), title: "Nueva Conversación")
+          let chat = ChatModel(id: uuid())
           state.chats.append(chat)
         }
         return .none
         
       case .addChatButtonPressed:
-        let chat = ChatModel(id: uuid(), title: "Nueva Conversación")
+        let chat = ChatModel(id: uuid())
         state.chats.insert(chat, at: 0)
         return .none
         

@@ -17,12 +17,12 @@ struct ChatListTests {
     let store = getStore()
     
     await store.send(\.onAppear) {
-      $0.chats = [ChatModel(id: UUID(0), title: "Nueva Conversación")]
+      $0.chats = [ChatModel(id: UUID(0))]
     }
   }
   
   @Test func doesNotAppendNewChatOnNonEmptyState() async throws {
-    let store = getStore(chats: [ChatModel(id: UUID(0), title: "New Chat")])
+    let store = getStore(chats: [ChatModel(id: UUID(0))])
     
     await store.send(\.onAppear)
   }
@@ -32,7 +32,7 @@ struct ChatListTests {
     let store = getStore(chats: [chat])
         
     await store.send(.addChatButtonPressed) {
-      $0.chats = [ChatModel(id: UUID(0), title: "Nueva Conversación"), chat]
+      $0.chats = [ChatModel(id: UUID(0)), chat]
     }
   }
 }
