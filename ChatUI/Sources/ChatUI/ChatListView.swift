@@ -29,6 +29,9 @@ struct ChatListView: View {
         }
         .foregroundStyle(.primary)
       }
+      .onDelete { indexSet in
+        store.send(.deleteButtonPressed(indexSet))
+      }
     }
     .navigationTitle("Chats")
     .toolbar {

@@ -35,6 +35,15 @@ struct ChatListTests {
       $0.chats = [ChatModel(id: UUID(0)), chat]
     }
   }
+  
+  @Test func chatDeletion() async throws {
+    let chat = ChatModel.mock
+    let store = getStore(chats: [chat])
+    
+    await store.send(.deleteButtonPressed(IndexSet(integer: 0))) {
+      $0.chats = [ChatModel(id: UUID(0))]
+    }
+  }
 }
 
 // MARK: - Helpers

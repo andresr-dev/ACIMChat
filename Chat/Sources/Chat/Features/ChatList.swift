@@ -6,6 +6,7 @@
 //
 
 import ComposableArchitecture
+import Foundation
 
 @Reducer
 public struct ChatList {
@@ -23,6 +24,7 @@ public struct ChatList {
     case onAppear
     case addChatButtonPressed
     case chatSelected(ChatModel)
+    case deleteButtonPressed(IndexSet)
   }
   
   @Dependency(\.uuid) var uuid
@@ -33,10 +35,7 @@ public struct ChatList {
     Reduce { state, action in
       switch action {
       case .onAppear:
-        if state.chats.isEmpty {
-          let chat = ChatModel(id: uuid())
-          state.chats.append(chat)
-        }
+        addNewChatIfNeeded(into: &state)
         return .none
         
       case .addChatButtonPressed:
@@ -46,7 +45,21 @@ public struct ChatList {
         
       case .chatSelected:
         return .none
+        
+      case let .deleteButtonPressed(indexSet):
+        for index in indexSet {
+          state.chats.remove(at: index)
+        }
+        addNewChatIfNeeded(into: &state)
+        return .none
       }
+    }
+  }
+  
+  func addNewChatIfNeeded(into state: inout State) {
+    if state.chats.isEmpty {
+      let chat = ChatModel(id: uuid())
+      state.chats.append(chat)
     }
   }
 }
