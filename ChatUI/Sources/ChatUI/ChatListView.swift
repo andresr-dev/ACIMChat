@@ -16,7 +16,7 @@ struct ChatListView: View {
     List {
       ForEach(store.chats) { chat in
         Button {
-          store.send(.chatSelected(chat))
+          store.send(.navigateTo(chat))
         } label: {
           HStack {
             Text(chat.title)

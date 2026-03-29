@@ -17,23 +17,30 @@ struct ChatListTests {
     let store = getStore()
     
     await store.send(\.onAppear) {
+      $0.onAppearPerformed = true
       $0.chats = [ChatModel(id: UUID(0))]
     }
+    await store.receive(\.navigateTo)
   }
   
   @Test func doesNotAppendNewChatOnNonEmptyState() async throws {
     let store = getStore(chats: [ChatModel(id: UUID(0))])
     
-    await store.send(\.onAppear)
+    await store.send(\.onAppear) {
+      $0.onAppearPerformed = true
+    }
+    await store.receive(\.navigateTo)
   }
   
-  @Test func addsNewChatToTopOnPressingPlusButton() async throws {
+  @Test func addsNewChat() async throws {
     let chat = ChatModel.mock
     let store = getStore(chats: [chat])
         
-    await store.send(.addChatButtonPressed) {
+    await store.send(.addChatButtonPressed)
+    await store.receive(\.addChat) {
       $0.chats = [ChatModel(id: UUID(0)), chat]
     }
+    await store.receive(\.navigateTo)
   }
   
   @Test func chatDeletion() async throws {
@@ -41,18 +48,35 @@ struct ChatListTests {
     let store = getStore(chats: [chat])
     
     await store.send(.deleteButtonPressed(IndexSet(integer: 0))) {
+      $0.chats = []
+    }
+    await store.receive(\.addChat) {
       $0.chats = [ChatModel(id: UUID(0))]
     }
+    await store.receive(\.navigateTo)
   }
 }
 
 // MARK: - Helpers
 extension ChatListTests {
-  func getStore(chats: IdentifiedArrayOf<ChatModel> = []) -> TestStoreOf<ChatList> {
-    TestStore(initialState: ChatList.State(chats: chats)) {
-      ChatList()
-    } withDependencies: {
-      $0.uuid = .incrementing
-    }
+  func getStore(
+    chats: IdentifiedArrayOf<ChatModel> = [],
+    fileID: StaticString = #fileID,
+    file filePath: StaticString = #filePath,
+    line: UInt = #line,
+    column: UInt = #column
+  ) -> TestStoreOf<ChatList> {
+    TestStore(
+      initialState: ChatList.State(chats: chats),
+      reducer: { ChatList() },
+      withDependencies: {
+        $0.uuid = .incrementing
+        $0.continuousClock = .immediate
+      },
+      fileID: fileID,
+      file: filePath,
+      line: line,
+      column: column
+    )
   }
 }
