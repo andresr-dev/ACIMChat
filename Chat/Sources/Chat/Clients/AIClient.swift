@@ -91,11 +91,21 @@ extension AIClient: DependencyKey {
       }
     }
   )
-  
+}
+
+extension AIClient {
   static let previewValue = AIClient { question in
-    try await Task.sleep(for: .seconds(2))
-    return ChatMessage(text: "I don't know, try asking me something else.", role: .ai)
+    try await Task.sleep(for: .seconds(1))
+    return .mockAIMessage
   }
   
   static let testValue = AIClient()
+  
+  static let failure = AIClient { _ in
+    throw Error.invalidResponse
+  }
+  
+  static let success = AIClient { _ in
+      .mockAIMessage
+  }
 }

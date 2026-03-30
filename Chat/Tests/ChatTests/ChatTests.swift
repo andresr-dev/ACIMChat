@@ -17,13 +17,13 @@ struct ChatTests {
   @Test func basicChatFlow() async throws {
     let store = getStore()
     
-    await store.send(.binding(.set(\.text, "Hello!"))) {
-      $0.text = "Hello!"
+    await store.send(.binding(.set(\.text, "Hello"))) {
+      $0.text = "Hello"
     }
     
-    let date = Date(timeIntervalSince1970: 1234567890)
-    let userMessage = ChatMessage(id: UUID(0), text: "Hello!", role: .user, date: date, displayingDate: true)
-    
+    let userMessage = ChatMessage.mockUserMessage
+    let aiMessage = ChatMessage.mockAIMessage
+
     await store.send(.sendMessageButtonPressed) {
       $0.chat.messages = [userMessage]
       $0.isTyping = true
@@ -33,14 +33,14 @@ struct ChatTests {
     await store.receive(\.delegate)
     await store.receive(\.startScrollDelay)
     
-    let aiResponse = ChatMessage(id: UUID(2), text: "Hello there!", role: .ai, date: date)
     await store.receive(\.aiResponse.success) {
       $0.isTyping = false
-      $0.chat.messages = [userMessage, aiResponse]
+      $0.chat.messages = [userMessage, aiMessage]
     }
     await store.receive(\.delegate)
+    
     await store.receive(\.scrollToBottom) {
-      $0.scrollPosition = aiResponse.id
+      $0.scrollPosition = aiMessage.id
     }
     
     await store.send(.binding(.set(\.text, "Hello Again!"))) {
@@ -57,7 +57,7 @@ struct ChatTests {
     let secondUserMessage = ChatMessage(id: UUID(1), text: "Hello Again!", role: .user, date: nextDayDate, displayingDate: true)
     
     await store.send(.sendMessageButtonPressed) {
-      $0.chat.messages = [userMessage, aiResponse, secondUserMessage]
+      $0.chat.messages = [userMessage, aiMessage, secondUserMessage]
       $0.isTyping = true
       $0.text = ""
     }
@@ -66,7 +66,7 @@ struct ChatTests {
     
     await store.receive(\.aiResponse.success) {
       $0.isTyping = false
-      $0.chat.messages = [userMessage, aiResponse, secondUserMessage, secondAIResponse]
+      $0.chat.messages = [userMessage, aiMessage, secondUserMessage, secondAIResponse]
     }
     await store.receive(\.delegate)
     await store.receive(\.scrollToBottom) {
@@ -111,18 +111,13 @@ struct ChatTests {
   }
   
   @Test func presentsAlertOnAIResponseError() async throws {
-    let store = getStore(
-      sendMessage: { _ in
-        struct SomeError: Error { }
-        throw SomeError()
-      }
-    )
+    let store = getStore(aiClient: .failure)
     
-    await store.send(.binding(.set(\.text, "Hello!"))) {
-      $0.text = "Hello!"
+    await store.send(.binding(.set(\.text, "Hello"))) {
+      $0.text = "Hello"
     }
-    
-    let userMessage = ChatMessage(id: UUID(0), text: "Hello!", role: .user, date: Date(timeIntervalSince1970: 1234567890), displayingDate: true)
+       
+    let userMessage = ChatMessage.mockUserMessage
     
     await store.send(.sendMessageButtonPressed) {
       $0.chat.messages = [userMessage]
@@ -149,9 +144,7 @@ extension ChatTests {
   private func getStore(
     messages: [ChatMessage] = [],
     text: String = "",
-    sendMessage: @escaping @Sendable ([ChatMessage]) async throws -> ChatMessage = { _ in
-      ChatMessage(id: UUID(2), text: "Hello there!", role: .ai, date: Date(timeIntervalSince1970: 1234567890))
-    },
+    aiClient: AIClient = AIClient.success,
     fileID: StaticString = #fileID,
     file filePath: StaticString = #filePath,
     line: UInt = #line,
@@ -165,8 +158,8 @@ extension ChatTests {
       withDependencies: {
         $0.uuid = .incrementing
         $0.continuousClock = .immediate
-        $0.date.now = Date(timeIntervalSince1970: 1234567890)
-        $0.aiClient.sendMessage = sendMessage
+        $0.date.now = Date(timeIntervalSince1970: 0)
+        $0.aiClient = aiClient
       },
       fileID: fileID,
       file: filePath,

@@ -38,25 +38,22 @@ struct RootTests {
     await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello")))))) {
       $0.path[id: 0, case: \.chat]?.text = "Hello"
     }
-    
-    let userMessage = ChatMessage(id: UUID(0), text: "Hello", role: .user, date: date, displayingDate: true)
-    
+        
     await store.send(.path(.element(id: 0, action: .chat(.sendMessageButtonPressed)))) {
-      $0.path[id: 0, case: \.chat]?.chat.messages = [userMessage]
+      $0.path[id: 0, case: \.chat]?.chat.messages = [.mockUserMessage]
       $0.path[id: 0, case: \.chat]?.isTyping = true
       $0.path[id: 0, case: \.chat]?.text = ""
     }
     
     var updatedChat = chat
-    updatedChat.messages = [userMessage]
+    updatedChat.messages = [.mockUserMessage]
     await store.receive(\.path[id: 0].chat.delegate.chatUpdated) {
       $0.chatList.chats = [updatedChat]
     }
     
     await store.receive(\.path[id: 0].chat.startScrollDelay)
     
-    let aiMessage = ChatMessage(id: UUID(2), text: "AI response", role: .ai, date: date)
-    updatedChat.messages.append(aiMessage)
+    updatedChat.messages.append(.mockAIMessage)
     await store.receive(\.path[id: 0].chat.aiResponse.success) {
       $0.path[id: 0, case: \.chat]?.isTyping = false
       $0.path[id: 0, case: \.chat]?.chat = updatedChat
@@ -67,7 +64,7 @@ struct RootTests {
     }
     
     await store.receive(\.path[id: 0].chat.scrollToBottom) {
-      $0.path[id: 0, case: \.chat]?.scrollPosition = aiMessage.id
+      $0.path[id: 0, case: \.chat]?.scrollPosition = ChatMessage.mockAIMessage.id
     }
     
     await store.send(.path(.popFrom(id: 0))) {
@@ -92,9 +89,8 @@ struct RootTests {
     
     await store.send(.path(.element(id: 0, action: .chat(.sendMessageButtonPressed))))
     
-    let userMessage = ChatMessage(id: UUID(0), text: "Hello", role: .user, date: Date(timeIntervalSince1970: 0), displayingDate: true)
     var updatedChat2 = chat2
-    updatedChat2.messages = [userMessage]
+    updatedChat2.messages = [.mockUserMessage]
     await store.receive(\.path[id: 0].chat.delegate.chatUpdated) {
       $0.chatList.chats = [updatedChat2, chat1]
     }
@@ -106,7 +102,6 @@ struct RootTests {
 extension RootTests {
   func getStore(
     chats: IdentifiedArrayOf<ChatModel> = [],
-    aiMessage: ChatMessage = ChatMessage(id: UUID(2), text: "AI response", role: .ai, date: Date(timeIntervalSince1970: 0)),
     fileID: StaticString = #fileID,
     file filePath: StaticString = #filePath,
     line: UInt = #line,
@@ -118,7 +113,7 @@ extension RootTests {
       ),
       reducer: { Root() },
       withDependencies: {
-        $0.aiClient.sendMessage = { _ in aiMessage }
+        $0.aiClient = .success
         $0.date.now = Date(timeIntervalSince1970: 0)
         $0.continuousClock = .immediate
         $0.uuid = .incrementing

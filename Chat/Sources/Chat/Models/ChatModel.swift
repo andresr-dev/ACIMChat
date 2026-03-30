@@ -48,6 +48,10 @@ public struct ChatMessage: Equatable, Identifiable, Sendable {
 }
 
 extension ChatMessage {
+  public static let mockUserMessage = ChatMessage(id: UUID(0), text: "Hello", role: .user, date: Date(timeIntervalSince1970: 0), displayingDate: true)
+  
+  public static let mockAIMessage = ChatMessage(id: UUID(2), text: "Hello there!", role: .ai, date: Date(timeIntervalSince1970: 0))
+  
   public static let mock = [
     ChatMessage(text: "This is a question in the chat, this is a question in the chat", role: .user),
     ChatMessage(text: "This is an answer from the AI, this is an answer from the AI", role: .ai),
