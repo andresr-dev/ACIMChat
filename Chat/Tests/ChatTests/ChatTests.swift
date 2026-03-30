@@ -112,7 +112,7 @@ struct ChatTests {
   }
   
   @Test func presentsAlertOnAIResponseError() async throws {
-    let store = getStore(aiClient: .failure)
+    let store = getStore(aiClient: .mock(.failure))
     
     await store.send(.binding(.set(\.text, "Hello"))) {
       $0.text = "Hello"
@@ -145,7 +145,7 @@ extension ChatTests {
   private func getStore(
     chat: ChatModel = ChatModel(),
     text: String = "",
-    aiClient: AIClient = AIClient.success,
+    aiClient: AIClient = AIClient.mock(.success),
     fileID: StaticString = #fileID,
     file filePath: StaticString = #filePath,
     line: UInt = #line,

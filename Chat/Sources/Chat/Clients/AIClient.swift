@@ -101,11 +101,14 @@ extension AIClient {
   
   static let testValue = AIClient()
   
-  static let failure = AIClient { _ in
-    throw Error.invalidResponse
-  }
+  enum MockState { case success, failure }
   
-  static let success = AIClient { _ in
-      .mockAIMessage
+  static func mock(_ state: MockState) -> AIClient {
+    switch state {
+    case .success:
+      return AIClient { _ in .mockAIMessage }
+    case .failure:
+      return AIClient { _ in throw Error.invalidResponse }
+    }
   }
 }

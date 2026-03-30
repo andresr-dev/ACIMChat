@@ -113,7 +113,7 @@ extension RootTests {
       ),
       reducer: { Root() },
       withDependencies: {
-        $0.aiClient = .success
+        $0.aiClient = AIClient.mock(.success)
         $0.date.now = Date(timeIntervalSince1970: 0)
         $0.continuousClock = .immediate
         $0.uuid = .incrementing
