@@ -64,11 +64,7 @@ struct ChatListView: View {
     ChatListView(
       store: Store(
         initialState: ChatList.State(
-          chats: [
-            ChatModel(messages: ChatMessage.mock),
-            ChatModel(messages: ChatMessage.mock),
-            ChatModel(messages: ChatMessage.mock)
-          ]
+          chats: [ .mock, .mock, .mock]
         )
       ) {
         ChatList()

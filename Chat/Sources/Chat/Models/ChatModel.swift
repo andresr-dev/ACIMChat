@@ -22,7 +22,20 @@ public struct ChatModel: Equatable, Identifiable, Sendable {
 
 public extension ChatModel {
   static var mock: ChatModel {
-    ChatModel(messages: ChatMessage.mock)
+    ChatModel(
+      messages: [
+        ChatMessage(text: "This is a question in the chat, this is a question in the chat", role: .user),
+        ChatMessage(text: "This is an answer from the AI, this is an answer from the AI", role: .ai),
+        ChatMessage(text: "This is another question in the chat, this is another question in the chat", role: .user),
+        ChatMessage(text: "This is another answer from the AI, this is an answer from the AI", role: .ai),
+        ChatMessage(text: "This is yet another question in the chat, this is yet another question in the chat", role: .user),
+        ChatMessage(text: "This is yet another answer in the chat from AI, this is an answer from the AI", role: .ai),
+        ChatMessage(text: "This is a question in the chat, this is a question in the chat", role: .user),
+        ChatMessage(text: "This is an answer from the AI, this is an answer from the AI", role: .ai),
+        ChatMessage(text: "This is another question in the chat, this is another question in the chat", role: .user),
+        ChatMessage(text: "This is another answer from the AI, this is an answer from the AI", role: .ai)
+      ]
+    )
   }
 }
 
@@ -47,23 +60,8 @@ public struct ChatMessage: Equatable, Identifiable, Sendable {
   }
 }
 
-extension ChatMessage {
-  public static let mockUserMessage = ChatMessage(id: UUID(0), text: "Hello", role: .user, date: Date(timeIntervalSince1970: 0), displayingDate: true)
+public extension ChatMessage {
+  static let mockUserMessage = ChatMessage(id: UUID(0), text: "Hello", role: .user, date: Date(timeIntervalSince1970: 0), displayingDate: true)
   
-  public static let mockAIMessage = ChatMessage(id: UUID(2), text: "Hello there!", role: .ai, date: Date(timeIntervalSince1970: 0))
-  
-  public static let mock = [
-    ChatMessage(text: "This is a question in the chat, this is a question in the chat", role: .user),
-    ChatMessage(text: "This is an answer from the AI, this is an answer from the AI", role: .ai),
-    ChatMessage(text: "This is another question in the chat, this is another question in the chat", role: .user),
-    ChatMessage(text: "This is another answer from the AI, this is an answer from the AI", role: .ai),
-    ChatMessage(text: "This is yet another question in the chat, this is yet another question in the chat", role: .user),
-    ChatMessage(text: "This is yet another answer in the chat from AI, this is an answer from the AI", role: .ai),
-    ChatMessage(text: "This is a question in the chat, this is a question in the chat", role: .user),
-    ChatMessage(text: "This is an answer from the AI, this is an answer from the AI", role: .ai),
-    ChatMessage(text: "This is another question in the chat, this is another question in the chat", role: .user),
-    ChatMessage(text: "This is another answer from the AI, this is an answer from the AI", role: .ai),
-//    ChatMessage(text: "This is the last question", role: .user),
-//    ChatMessage(text: "This is the last AI answer", role: .ai)
-  ]
+  static let mockAIMessage = ChatMessage(id: UUID(2), text: "Hello there!", role: .ai, date: Date(timeIntervalSince1970: 0))
 }

@@ -93,11 +93,12 @@ struct ChatTests {
   }
   
   @Test func fieldIsNotFocusedWhenViewAppearsWithChatNotEmpty() async throws {
-    let store = getStore(messages: ChatMessage.mock)
+    let chat = ChatModel.mock
+    let store = getStore(chat: chat)
     
     await store.send(\.onAppear)
     await store.receive(\.scrollToBottom) {
-      $0.scrollPosition = ChatMessage.mock.last!.id
+      $0.scrollPosition = chat.messages.last!.id
     }
   }
   
@@ -142,7 +143,7 @@ struct ChatTests {
 // MARK: - Helpers
 extension ChatTests {
   private func getStore(
-    messages: [ChatMessage] = [],
+    chat: ChatModel = ChatModel(),
     text: String = "",
     aiClient: AIClient = AIClient.success,
     fileID: StaticString = #fileID,
@@ -151,9 +152,7 @@ extension ChatTests {
     column: UInt = #column
   ) -> TestStore<Chat.State, Chat.Action> {
     TestStore(
-      initialState: Chat.State(
-        chat: ChatModel(messages: messages),
-        text: text),
+      initialState: Chat.State(chat: chat, text: text),
       reducer: { Chat() },
       withDependencies: {
         $0.uuid = .incrementing
