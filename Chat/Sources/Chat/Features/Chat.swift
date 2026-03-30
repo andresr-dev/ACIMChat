@@ -43,7 +43,7 @@ public struct Chat {
   
   public init() { }
   
-  @Dependency(\.aiClient) var aiClient
+  @Dependency(\.aiClient.sendMessage) var sendMessage
   @Dependency(\.uuid) var uuid
   @Dependency(\.date.now) var now
   @Dependency(\.continuousClock) var clock
@@ -80,10 +80,10 @@ public struct Chat {
         state.text = ""
         let messages = Array(state.chat.messages.suffix(11))
         
-        return .run { [aiClient] send in
+        return .run { [sendMessage] send in
           await send(.startScrollDelay)
           await send(.aiResponse(Result {
-            try await aiClient.sendMessage(messages)
+            try await sendMessage(messages)
           }))
         }
         
