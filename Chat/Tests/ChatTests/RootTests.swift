@@ -28,7 +28,6 @@ struct RootTests {
   
   @Test func messagesPersistAfterNavigatingBack() async throws {
     let chat = ChatModel(id: UUID(0))
-    let date = Date(timeIntervalSince1970: 0)
     let store = getStore(chats: [chat])
     
     await store.send(.chatList(.navigateTo(chat))) {

@@ -13,19 +13,17 @@ public struct ChatList {
   
   @ObservableState
   public struct State: Equatable {
-    public var chats: IdentifiedArrayOf<ChatModel>
+    @Shared(.chats) public var chats: IdentifiedArrayOf<ChatModel>
     var onAppearPerformed = false
     
-    public init(chats: IdentifiedArrayOf<ChatModel> = []) {
-      self.chats = chats
-    }
+    public init() { }
   }
   
   public enum Action {
     case onAppear
     case addChatButtonPressed
     case deleteButtonPressed(IndexSet)
-    case navigateTo(ChatModel)
+    case navigateTo(chatID: ChatModel.ID)
     case addChat(ChatModel)
   }
   
@@ -43,22 +41,26 @@ public struct ChatList {
         
         if state.chats.isEmpty {
           let chat = ChatModel(id: uuid())
-          state.chats.append(chat)
+          state.$chats.withLock {
+            _ = $0.append(chat)
+          }
         }
-        guard let chat = state.chats.first else { return .none }
-        return .send(.navigateTo(chat))
+        guard let chatID = state.chats.ids.first else { return .none }
+        return .send(.navigateTo(chatID: chatID))
         
       case .addChatButtonPressed:
         return .run { [clock, uuid] send in
           let chat = ChatModel(id: uuid())
           await send(.addChat(chat), animation: .default)
           try await clock.sleep(for: .seconds(0.5))
-          await send(.navigateTo(chat))
+          await send(.navigateTo(chatID: chat.id))
         }
         
       case let .deleteButtonPressed(indexSet):
         for index in indexSet {
-          state.chats.remove(at: index)
+          state.$chats.withLock {
+            _ = $0.remove(at: index)
+          }
         }
         if state.chats.isEmpty {
           return .run { [clock, uuid] send in
@@ -66,13 +68,15 @@ public struct ChatList {
             let chat = ChatModel(id: uuid())
             await send(.addChat(chat), animation: .default)
             try await clock.sleep(for: .seconds(0.3))
-            await send(.navigateTo(chat))
+            await send(.navigateTo(chatID: chat.id))
           }
         }
         return .none
         
       case let .addChat(chat):
-        state.chats.insert(chat, at: 0)
+        state.$chats.withLock {
+          _ = $0.insert(chat, at: 0)
+        }
         return .none
         
       case .navigateTo:

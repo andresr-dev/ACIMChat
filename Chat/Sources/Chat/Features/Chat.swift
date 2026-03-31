@@ -6,7 +6,7 @@ import Foundation
 public struct Chat {
   @ObservableState
   public struct State: Equatable {
-    public var chat: ChatModel
+    @Shared public var chat: ChatModel
     public var text: String
     public var focusedField = false
     public var isTyping = false
@@ -17,8 +17,8 @@ public struct Chat {
       !text.isEmpty
     }
     
-    public init(chat: ChatModel = ChatModel(messages: []), text: String = "") {
-      self.chat = chat
+    public init(chat: Shared<ChatModel>, text: String = "") {
+      self._chat = chat
       self.text = text
     }
   }
@@ -75,7 +75,9 @@ public struct Chat {
           displayingDate = !Calendar.current.isDate(now, inSameDayAs: lastMessageDate)
         }
         let message = ChatMessage(id: uuid(), text: text, role: .user, date: now, displayingDate: displayingDate)
-        state.chat.messages.append(message)
+        state.$chat.withLock {
+          $0.messages.append(message)
+        }
         state.isTyping = true
         state.text = ""
         let messages = Array(state.chat.messages.suffix(11))
@@ -93,7 +95,9 @@ public struct Chat {
         switch result {
         case let .success(message):
           let lastScrolledID = state.chat.messages.last?.id
-          state.chat.messages.append(message)
+          state.$chat.withLock {
+            $0.messages.append(message)
+          }
           return .run { [scrollPosition = state.scrollPosition] send in
             guard scrollPosition == lastScrolledID else { return }
             await send(.startScrollDelay)

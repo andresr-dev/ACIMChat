@@ -16,7 +16,7 @@ struct ChatListView: View {
     List {
       ForEach(store.chats) { chat in
         Button {
-          store.send(.navigateTo(chat))
+          store.send(.navigateTo(chatID: chat.id))
         } label: {
           HStack {
             Text(chat.title)
@@ -47,25 +47,11 @@ struct ChatListView: View {
   }
 }
 
-#Preview("Empty history") {
+#Preview {
   NavigationStack {
     ChatListView(
       store: Store(
         initialState: ChatList.State()
-      ) {
-        ChatList()
-      }
-    )
-  }
-}
-
-#Preview("Chat history") {
-  NavigationStack {
-    ChatListView(
-      store: Store(
-        initialState: ChatList.State(
-          chats: [ .mock, .mock, .mock]
-        )
       ) {
         ChatList()
       }

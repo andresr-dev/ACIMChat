@@ -54,8 +54,7 @@ public struct ChatView: View {
 
 #Preview {
   NavigationStack {
-    ChatView(
-      store: Store(initialState: Chat.State()) {
+    ChatView(store: Store(initialState: Chat.State(chat: Shared(value: .mock))) {
         Chat()
       }
     )

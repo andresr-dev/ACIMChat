@@ -30,14 +30,11 @@ public struct RootView: View {
 }
 
 #Preview {
+  @Shared(.chats) var chats = [.mock]
+  
   RootView(
-    store: Store(
-      initialState: Root.State(
-        chatList: ChatList.State(
-          chats: [.mock]
-        )
-      )
-    ) {
-    Root()
-  })
+    store: Store(initialState: Root.State()) {
+      Root()
+    }
+  )
 }

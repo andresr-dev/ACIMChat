@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct ChatModel: Equatable, Identifiable, Sendable {
+public struct ChatModel: Equatable, Identifiable, Codable, Sendable {
   public let id: UUID
   public var messages: [ChatMessage]
   public var title: String {
@@ -39,14 +39,14 @@ public extension ChatModel {
   }
 }
 
-public struct ChatMessage: Equatable, Identifiable, Sendable {
+public struct ChatMessage: Equatable, Identifiable, Codable, Sendable {
   public let id: UUID
   public let text: String
   public let role: Role
   public let date: Date
   public let displayingDate: Bool
   
-  public enum Role: String, Sendable {
+  public enum Role: String, Codable, Sendable {
     case user
     case ai = "assistant"
   }
