@@ -26,7 +26,6 @@ public struct Chat {
   public enum Action: BindableAction {
     case binding(BindingAction<State>)
     case onAppear
-    case startScrollDelay
     case scrollToBottom
     case sendMessageButtonPressed
     case aiResponse(Result<ChatMessage, Error>)
@@ -57,12 +56,6 @@ public struct Chat {
         state.focusedField = state.chat.messages.isEmpty
         return .send(.scrollToBottom)
         
-      case .startScrollDelay:
-        return .run { [clock] send in
-          try await clock.sleep(for: .seconds(0.2))
-          await send(.scrollToBottom, animation: .default)
-        }
-        
       case .scrollToBottom:
         state.scrollPosition = state.chat.messages.last?.id
         return .none
@@ -82,11 +75,18 @@ public struct Chat {
         state.text = ""
         let messages = Array(state.chat.messages.suffix(11))
         
-        return .run { [sendMessage] send in
-          await send(.startScrollDelay)
-          await send(.aiResponse(Result {
-            try await sendMessage(messages)
-          }))
+        return .run { [clock, sendMessage] send in
+          await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+              try await clock.sleep(for: .seconds(0.2))
+              await send(.scrollToBottom, animation: .default)
+            }
+            group.addTask {
+              await send(.aiResponse(Result {
+                try await sendMessage(messages)
+              }))
+            }
+          }
         }
         
       case let .aiResponse(result):
@@ -98,9 +98,10 @@ public struct Chat {
           state.$chat.withLock {
             $0.messages.append(message)
           }
-          return .run { [scrollPosition = state.scrollPosition] send in
+          return .run { [clock, scrollPosition = state.scrollPosition] send in
             guard scrollPosition == lastScrolledID else { return }
-            await send(.startScrollDelay)
+            try await clock.sleep(for: .seconds(0.2))
+            await send(.scrollToBottom, animation: .default)
           }
         case .failure:
           state.alert = .error

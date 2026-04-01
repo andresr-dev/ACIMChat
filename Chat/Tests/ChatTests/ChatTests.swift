@@ -25,17 +25,17 @@ struct ChatTests {
     let aiMessage = ChatMessage.mockAIMessage
 
     await store.send(.sendMessageButtonPressed) {
-      $0.chat.messages = [userMessage]
+      $0.$chat.messages.withLock { $0 = [userMessage] }
       $0.isTyping = true
       $0.text = ""
     }
     
-    await store.receive(\.delegate)
-    await store.receive(\.startScrollDelay)
+    await store.receive(\.delegate) {
+      $0.$chat.messages.withLock { $0 = [userMessage, aiMessage] }
+    }
     
     await store.receive(\.aiResponse.success) {
       $0.isTyping = false
-      $0.chat.messages = [userMessage, aiMessage]
     }
     await store.receive(\.delegate)
     
@@ -57,17 +57,22 @@ struct ChatTests {
     let secondUserMessage = ChatMessage(id: UUID(1), text: "Hello Again!", role: .user, date: nextDayDate, displayingDate: true)
     
     await store.send(.sendMessageButtonPressed) {
-      $0.chat.messages = [userMessage, aiMessage, secondUserMessage]
+      $0.$chat.messages.withLock {
+        $0 = [userMessage, aiMessage, secondUserMessage]
+      }
       $0.isTyping = true
       $0.text = ""
     }
-    await store.receive(\.delegate)
-    await store.receive(\.startScrollDelay)
+    await store.receive(\.delegate) {
+      $0.$chat.messages.withLock {
+        $0 = [userMessage, aiMessage, secondUserMessage, secondAIResponse]
+      }
+    }
     
     await store.receive(\.aiResponse.success) {
       $0.isTyping = false
-      $0.chat.messages = [userMessage, aiMessage, secondUserMessage, secondAIResponse]
     }
+    
     await store.receive(\.delegate)
     await store.receive(\.scrollToBottom) {
       $0.scrollPosition = secondAIResponse.id
@@ -94,7 +99,7 @@ struct ChatTests {
   
   @Test func fieldIsNotFocusedWhenViewAppearsWithChatNotEmpty() async throws {
     let chat = ChatModel.mock
-    let store = getStore(chat: chat)
+    let store = getStore(chat: Shared(value: chat))
     
     await store.send(\.onAppear)
     await store.receive(\.scrollToBottom) {
@@ -121,15 +126,13 @@ struct ChatTests {
     let userMessage = ChatMessage.mockUserMessage
     
     await store.send(.sendMessageButtonPressed) {
-      $0.chat.messages = [userMessage]
+      $0.$chat.messages.withLock { $0 = [userMessage] }
       $0.isTyping = true
       $0.text = ""
     }
     
     await store.receive(\.delegate)
-    
-    await store.receive(\.startScrollDelay)
-    
+        
     await store.receive(\.aiResponse) {
       $0.isTyping = false
       $0.alert = .error
@@ -143,7 +146,7 @@ struct ChatTests {
 // MARK: - Helpers
 extension ChatTests {
   private func getStore(
-    chat: ChatModel = ChatModel(),
+    chat: Shared<ChatModel> = Shared(value: ChatModel()),
     text: String = "",
     aiClient: AIClient = AIClient.mock(.success),
     fileID: StaticString = #fileID,

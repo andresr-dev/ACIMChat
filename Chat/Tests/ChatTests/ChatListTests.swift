@@ -18,13 +18,14 @@ struct ChatListTests {
     
     await store.send(\.onAppear) {
       $0.onAppearPerformed = true
-      $0.chats = [ChatModel(id: UUID(0))]
+      $0.$chats.withLock { $0 = [ChatModel(id: UUID(0))] }
     }
     await store.receive(\.navigateTo)
   }
   
   @Test func doesNotAppendNewChatOnNonEmptyState() async throws {
-    let store = getStore(chats: [ChatModel(id: UUID(0))])
+    @Shared(.chats) var chats = [ChatModel(id: UUID(0))]
+    let store = getStore()
     
     await store.send(\.onAppear) {
       $0.onAppearPerformed = true
@@ -34,24 +35,25 @@ struct ChatListTests {
   
   @Test func addsNewChat() async throws {
     let chat = ChatModel.mock
-    let store = getStore(chats: [chat])
+    @Shared(.chats) var chats = [chat]
+    let store = getStore()
         
     await store.send(.addChatButtonPressed)
     await store.receive(\.addChat) {
-      $0.chats = [ChatModel(id: UUID(0)), chat]
+      $0.$chats.withLock { $0 = [ChatModel(id: UUID(0)), chat] }
     }
     await store.receive(\.navigateTo)
   }
   
   @Test func chatDeletion() async throws {
-    let chat = ChatModel.mock
-    let store = getStore(chats: [chat])
+    @Shared(.chats) var chats = [.mock]
+    let store = getStore()
     
     await store.send(.deleteButtonPressed(IndexSet(integer: 0))) {
-      $0.chats = []
+      $0.$chats.withLock { $0 = [] }
     }
     await store.receive(\.addChat) {
-      $0.chats = [ChatModel(id: UUID(0))]
+      $0.$chats.withLock { $0 = [ChatModel(id: UUID(0))] }
     }
     await store.receive(\.navigateTo)
   }
@@ -60,14 +62,13 @@ struct ChatListTests {
 // MARK: - Helpers
 extension ChatListTests {
   func getStore(
-    chats: IdentifiedArrayOf<ChatModel> = [],
     fileID: StaticString = #fileID,
     file filePath: StaticString = #filePath,
     line: UInt = #line,
     column: UInt = #column
   ) -> TestStoreOf<ChatList> {
     TestStore(
-      initialState: ChatList.State(chats: chats),
+      initialState: ChatList.State(),
       reducer: { ChatList() },
       withDependencies: {
         $0.uuid = .incrementing
