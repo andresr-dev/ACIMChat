@@ -16,6 +16,7 @@ struct ACIMChatApp: App {
   
   @State private var store = Store(initialState: Root.State()) {
     Root()
+      ._printChanges()
   }
   
   var body: some Scene {

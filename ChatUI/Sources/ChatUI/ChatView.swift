@@ -17,9 +17,9 @@ public struct ChatView: View {
   }
   
   public var body: some View {
-    VStack(spacing: 0) {
+    VStack(spacing: 12) {
       ScrollView {
-        LazyVStack(spacing: 12) {
+        VStack(spacing: 12) {
           ForEach(store.chat.messages) { message in
             VStack(alignment: .leading, spacing: 12) {
               MessageView(message: message)
@@ -38,13 +38,13 @@ public struct ChatView: View {
       .scrollDismissesKeyboard(.interactively)
       .defaultScrollAnchor(.bottom)
       .scrollPosition(id: $store.scrollPosition, anchor: .bottom)
-      .padding(.top, 12)
+//      .padding(.top, 12)
       
       MessageInputView(store: store)
         .padding([.horizontal, .bottom])
-        .padding(.top, 12)
-        .background()
-        .ignoresSafeArea()
+//        .padding(.top, 12)
+//        .background()
+//        .ignoresSafeArea()
     }
     .navigationTitle("UCDM")
     .navigationBarTitleDisplayMode(.inline)
@@ -54,8 +54,9 @@ public struct ChatView: View {
 
 #Preview {
   NavigationStack {
-    ChatView(store: Store(initialState: Chat.State(chat: Shared(value: .mock))) {
+    ChatView(store: Store(initialState: Chat.State(chat: Shared(value: ChatModel()))) {
         Chat()
+        ._printChanges()
       }
     )
   }

@@ -36,7 +36,7 @@ public struct Chat {
     
     @CasePathable
     public enum Delegate: Equatable {
-      case chatUpdated(ChatModel)
+      case chatUpdated(id: ChatModel.ID)
     }
   }
   
@@ -54,7 +54,10 @@ public struct Chat {
       switch action {
       case .onAppear:
         state.focusedField = state.chat.messages.isEmpty
-        return .send(.scrollToBottom)
+        return .run { [clock] send in
+          try await clock.sleep(for: .seconds(0.05))
+          await send(.scrollToBottom)
+        }
         
       case .scrollToBottom:
         state.scrollPosition = state.chat.messages.last?.id
@@ -114,7 +117,7 @@ public struct Chat {
     }
     .ifLet(\.$alert, action: \.alert)
     .onChange(of: \.chat) { oldValue, state in
-        .send(.delegate(.chatUpdated(state.chat)))
+        .send(.delegate(.chatUpdated(id: state.chat.id)))
     }
   }
 }

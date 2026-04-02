@@ -43,8 +43,8 @@ public struct Root {
     
     Reduce { state, action in
       switch action {
-      case let .path(.element(id: _, action: .chat(.delegate(.chatUpdated(chat))))):
-        moveChatToTop(state: &state, chatID: chat.id)
+      case let .path(.element(id: _, action: .chat(.delegate(.chatUpdated(id: chatID))))):
+        moveChatToTop(state: &state, chatID: chatID)
         return .none
         
       case let .chatList(.navigateTo(chatID: chatID)):
