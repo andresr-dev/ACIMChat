@@ -11,6 +11,7 @@ struct MessageView: View {
         Text(message.date.formatted(date: .abbreviated, time: .omitted))
           .font(.caption)
           .foregroundStyle(.secondary)
+          .textSelection(.enabled)
       }
       
       HStack(alignment: .bottom) {
