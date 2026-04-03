@@ -10,7 +10,8 @@ public struct Chat {
     public var text: String
     public var focusedField = false
     public var isTyping = false
-    public var scrollPosition: UUID?
+    public var scrollPosition: String?
+    public let typingIndicatorID = "typing"
     @Presents public var alert: AlertState<Action.Alert>?
     
     public var isShowingSendButton: Bool {
@@ -26,7 +27,8 @@ public struct Chat {
   public enum Action: BindableAction {
     case binding(BindingAction<State>)
     case onAppear
-    case scrollToBottom
+    case scrollToLastMessage
+    case scrollToTypingIndicator
     case sendMessageButtonPressed
     case aiResponse(Result<ChatMessage, Error>)
     case alert(PresentationAction<Alert>)
@@ -54,13 +56,14 @@ public struct Chat {
       switch action {
       case .onAppear:
         state.focusedField = state.chat.messages.isEmpty
-        return .run { [clock] send in
-          try await clock.sleep(for: .seconds(0.05))
-          await send(.scrollToBottom)
-        }
+        return .none
         
-      case .scrollToBottom:
-        state.scrollPosition = state.chat.messages.last?.id
+      case .scrollToLastMessage:
+        state.scrollPosition = state.chat.messages.last?.idString
+        return .none
+        
+      case .scrollToTypingIndicator:
+        state.scrollPosition = state.typingIndicatorID
         return .none
         
       case .sendMessageButtonPressed:
@@ -81,8 +84,8 @@ public struct Chat {
         return .run { [clock, sendMessage] send in
           await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-              try await clock.sleep(for: .seconds(0.2))
-              await send(.scrollToBottom, animation: .default)
+              try await clock.sleep(for: .seconds(0.25))
+              await send(.scrollToTypingIndicator, animation: .default)
             }
             group.addTask {
               await send(.aiResponse(Result {
@@ -97,14 +100,12 @@ public struct Chat {
         
         switch result {
         case let .success(message):
-          let lastScrolledID = state.chat.messages.last?.id
           state.$chat.withLock {
             $0.messages.append(message)
           }
-          return .run { [clock, scrollPosition = state.scrollPosition] send in
-            guard scrollPosition == lastScrolledID else { return }
-            try await clock.sleep(for: .seconds(0.2))
-            await send(.scrollToBottom, animation: .default)
+          return .run { [clock] send in
+            try await clock.sleep(for: .seconds(0.25))
+            await send(.scrollToLastMessage, animation: .default)
           }
         case .failure:
           state.alert = .error

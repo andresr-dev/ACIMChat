@@ -1,5 +1,5 @@
 //
-//  SharedExtension.swift
+//  Shared+Extension.swift
 //  Chat
 //
 //  Created by Andres Raigoza on 31/03/26.

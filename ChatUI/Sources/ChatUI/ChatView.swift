@@ -11,40 +11,69 @@ import SwiftUI
 
 public struct ChatView: View {
   @Bindable var store: StoreOf<Chat>
+  private let rowInsets = EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
   
   public init(store: StoreOf<Chat>) {
     self.store = store
   }
   
   public var body: some View {
-    VStack(spacing: 12) {
-      ScrollView {
-        VStack(spacing: 12) {
-          ForEach(store.chat.messages) { message in
-            VStack(alignment: .leading, spacing: 12) {
-              MessageView(message: message)
-              
-              if store.chat.messages.last == message, store.isTyping {
-                TypingIndicator()
-                  .transition(.identity)
-              }
-            }
-            .id(message.id)
-          }
+    ScrollViewReader { proxy in
+      List {
+        ForEach(store.chat.messages) { message in
+          MessageView(message: message)
+            .id(message.idString)
+            .listRowSeparator(.hidden)
+            .listRowInsets(rowInsets)
         }
-        .padding([.horizontal])
-        .scrollTargetLayout()
+        
+        if store.isTyping {
+          TypingIndicator()
+            .id(store.typingIndicatorID)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .listRowSeparator(.hidden)
+            .listRowInsets(rowInsets)
+        }
       }
+      .listStyle(.plain)
+      .listRowSpacing(10)
       .scrollDismissesKeyboard(.interactively)
       .defaultScrollAnchor(.bottom)
-      .scrollPosition(id: $store.scrollPosition, anchor: .bottom)
-//      .padding(.top, 12)
-      
+      .onChange(of: store.scrollPosition) { oldValue, newValue in
+        withAnimation {
+          proxy.scrollTo(newValue, anchor: .bottom)
+        }
+      }
+      .task {
+        proxy.scrollTo(store.chat.messages.last?.idString, anchor: .bottom)
+      }
+      .onChange(of: store.focusedField) { _, focused in
+        if focused {
+          Task { @MainActor in
+            try await Task.sleep(for: .seconds(0.25))
+            withAnimation {
+              proxy.scrollTo(
+                store.isTyping ? store.typingIndicatorID : store.chat.messages.last?.idString,
+                anchor: .bottom
+              )
+            }
+          }
+        }
+      }
+      .onScrollGeometryChange(for: Bool.self, of: { geo in
+        return geo.contentOffset.y < geo.contentSize.height - 100
+      }, action: { oldValue, newValue in
+        print("❤️ isScrolledToBottom: \(newValue)")
+      })
+    }
+    .safeAreaInset(edge: .bottom) {
       MessageInputView(store: store)
         .padding([.horizontal, .bottom])
-//        .padding(.top, 12)
-//        .background()
-//        .ignoresSafeArea()
+        .padding(.top, 6)
+        .background {
+          Color(.systemBackground)
+            .ignoresSafeArea()
+        }
     }
     .navigationTitle("UCDM")
     .navigationBarTitleDisplayMode(.inline)
@@ -54,9 +83,12 @@ public struct ChatView: View {
 
 #Preview {
   NavigationStack {
-    ChatView(store: Store(initialState: Chat.State(chat: Shared(value: ChatModel()))) {
+    ChatView(
+      store: Store(
+        initialState: Chat.State(chat: Shared(value: .mock))
+      ) {
         Chat()
-        ._printChanges()
+          ._printChanges()
       }
     )
   }

@@ -95,7 +95,7 @@ extension AIClient: DependencyKey {
 
 extension AIClient {
   static let previewValue = AIClient { question in
-    try await Task.sleep(for: .seconds(1))
+    try await Task.sleep(for: .seconds(2))
     return ChatMessage(id: UUID(), text: "Hello there!", role: .ai, date: .now)
   }
   
