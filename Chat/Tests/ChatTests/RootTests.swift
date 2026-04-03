@@ -70,8 +70,12 @@ struct RootTests {
     
     await store.receive(\.path[id: 0].chat.delegate.chatUpdated)
     
-    await store.receive(\.path[id: 0].chat.scrollToBottom) {
-      $0.path[id: 0, case: \.chat]?.scrollPosition = ChatMessage.mockAIMessage.id
+    await store.receive(\.path[id: 0].chat.scrollToTypingIndicator) {
+      $0.path[id: 0, case: \.chat]?.scrollPosition = "typing"
+    }
+    
+    await store.receive(\.path[id: 0].chat.scrollToLastMessage) {
+      $0.path[id: 0, case: \.chat]?.scrollPosition = ChatMessage.mockAIMessage.idString
     }
     
     await store.send(.path(.popFrom(id: 0))) {

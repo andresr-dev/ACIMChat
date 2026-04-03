@@ -39,8 +39,12 @@ struct ChatTests {
     }
     await store.receive(\.delegate)
     
-    await store.receive(\.scrollToBottom) {
-      $0.scrollPosition = aiMessage.id
+    await store.receive(\.scrollToTypingIndicator) {
+      $0.scrollPosition = "typing"
+    }
+    
+    await store.receive(\.scrollToLastMessage) {
+      $0.scrollPosition = aiMessage.idString
     }
     
     await store.send(.binding(.set(\.text, "Hello Again!"))) {
@@ -74,8 +78,13 @@ struct ChatTests {
     }
     
     await store.receive(\.delegate)
-    await store.receive(\.scrollToBottom) {
-      $0.scrollPosition = secondAIResponse.id
+    
+    await store.receive(\.scrollToTypingIndicator) {
+      $0.scrollPosition = "typing"
+    }
+    
+    await store.receive(\.scrollToLastMessage) {
+      $0.scrollPosition = secondAIResponse.idString
     }
   }
   
@@ -93,8 +102,6 @@ struct ChatTests {
     await store.send(\.onAppear) {
       $0.focusedField = true
     }
-    
-    await store.receive(\.scrollToBottom)
   }
   
   @Test func fieldIsNotFocusedWhenViewAppearsWithChatNotEmpty() async throws {
@@ -102,9 +109,6 @@ struct ChatTests {
     let store = getStore(chat: Shared(value: chat))
     
     await store.send(\.onAppear)
-    await store.receive(\.scrollToBottom) {
-      $0.scrollPosition = chat.messages.last!.id
-    }
   }
   
   @Test func sendButtonIsVisibleWhenViewAppearsWithTextFieldPopulated() async throws {
@@ -113,7 +117,6 @@ struct ChatTests {
     await store.send(\.onAppear) {
       $0.focusedField = true
     }
-    await store.receive(\.scrollToBottom)
   }
   
   @Test func presentsAlertOnAIResponseError() async throws {
@@ -137,8 +140,8 @@ struct ChatTests {
       $0.isTyping = false
       $0.alert = .error
     }
-    await store.receive(\.scrollToBottom) {
-      $0.scrollPosition = userMessage.id
+    await store.receive(\.scrollToTypingIndicator) {
+      $0.scrollPosition = "typing"
     }
   }
 }
