@@ -84,7 +84,7 @@ public struct Chat {
         return .run { [clock, sendMessage] send in
           await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-              try await clock.sleep(for: .seconds(0.25))
+              try await clock.sleep(for: .seconds(0.2))
               await send(.scrollToTypingIndicator, animation: .default)
             }
             group.addTask {
@@ -104,7 +104,7 @@ public struct Chat {
             $0.messages.append(message)
           }
           return .run { [clock] send in
-            try await clock.sleep(for: .seconds(0.25))
+            try await clock.sleep(for: .seconds(0.2))
             await send(.scrollToLastMessage, animation: .default)
           }
         case .failure:

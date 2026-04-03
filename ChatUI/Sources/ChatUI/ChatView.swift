@@ -36,7 +36,7 @@ public struct ChatView: View {
         }
       }
       .listStyle(.plain)
-      .listRowSpacing(10)
+      .listRowSpacing(12)
       .scrollDismissesKeyboard(.interactively)
       .defaultScrollAnchor(.bottom)
       .onChange(of: store.scrollPosition) { oldValue, newValue in
@@ -50,7 +50,7 @@ public struct ChatView: View {
       .onChange(of: store.focusedField) { _, focused in
         if focused {
           Task { @MainActor in
-            try await Task.sleep(for: .seconds(0.25))
+            try await Task.sleep(for: .seconds(0.2))
             withAnimation {
               proxy.scrollTo(
                 store.isTyping ? store.typingIndicatorID : store.chat.messages.last?.idString,
