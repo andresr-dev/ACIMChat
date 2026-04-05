@@ -41,5 +41,5 @@ struct MessageView: View {
 }
 
 #Preview {
-  MessageView(message: .mockUserMessage)
+  MessageView(message: ChatModel.mock.messages[0])
 }

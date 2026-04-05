@@ -18,55 +18,45 @@ public struct ChatView: View {
   }
   
   public var body: some View {
-    ScrollViewReader { proxy in
-      List {
-        ForEach(store.chat.messages) { message in
-          MessageView(message: message)
-            .id(message.idString)
-            .listRowSeparator(.hidden)
-            .listRowInsets(rowInsets)
-        }
-        
-        if store.isTyping {
-          TypingIndicator()
-            .id(store.typingIndicatorID)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .listRowSeparator(.hidden)
-            .listRowInsets(rowInsets)
-        }
-      }
-      .listStyle(.plain)
-      .listRowSpacing(12)
-      .scrollDismissesKeyboard(.interactively)
-      .defaultScrollAnchor(.bottom)
-      .onChange(of: store.scrollPosition) { oldValue, newValue in
-        withAnimation {
-          proxy.scrollTo(newValue, anchor: .bottom)
-        }
-      }
-      .task {
-        proxy.scrollTo(store.chat.messages.last?.idString, anchor: .bottom)
-      }
-      .onChange(of: store.focusedField) { _, focused in
-        if focused {
-          Task { @MainActor in
-            try await Task.sleep(for: .seconds(0.2))
-            withAnimation {
-              proxy.scrollTo(
-                store.isTyping ? store.typingIndicatorID : store.chat.messages.last?.idString,
-                anchor: .bottom
-              )
-            }
+    VStack {
+      ScrollViewReader { proxy in
+        List {
+          ForEach(store.chat.messages) { message in
+            MessageView(message: message)
+              .id(message.idString)
+              .listRowSeparator(.hidden)
+              .listRowInsets(rowInsets)
+          }
+          
+          if store.isTyping {
+            TypingIndicator()
+              .id(store.typingIndicatorID)
+              .frame(maxWidth: .infinity, alignment: .leading)
+              .listRowSeparator(.hidden)
+              .listRowInsets(rowInsets)
           }
         }
+        .listStyle(.plain)
+        .listRowSpacing(12)
+        .scrollDismissesKeyboard(.interactively)
+        .defaultScrollAnchor(.bottom)
+        .task(id: store.scrollToLastMessageTaskID) {
+          proxy.scrollTo(store.chat.messages.last?.idString, anchor: .bottom)
+        }
+        .onChange(of: store.scrollPosition) { oldValue, newValue in
+          withAnimation {
+            proxy.scrollTo(newValue, anchor: .bottom)
+          }
+        }
+        .onScrollGeometryChange(for: Bool.self, of: { geo in
+          let bottomOffsetY = geo.contentOffset.y + geo.visibleRect.height
+          let contentHeight = geo.contentSize.height
+          return bottomOffsetY > contentHeight - 2
+        }, action: { wasScrollAtBottom, isScrollAtBottom in
+          store.send(.isScrollAtBottomChanged(isScrollAtBottom))
+        })
       }
-      .onScrollGeometryChange(for: Bool.self, of: { geo in
-        return geo.contentOffset.y < geo.contentSize.height - 100
-      }, action: { oldValue, newValue in
-        print("❤️ isScrolledToBottom: \(newValue)")
-      })
-    }
-    .safeAreaInset(edge: .bottom) {
+      
       MessageInputView(store: store)
         .padding([.horizontal, .bottom])
         .padding(.top, 6)
@@ -88,7 +78,6 @@ public struct ChatView: View {
         initialState: Chat.State(chat: Shared(value: .mock))
       ) {
         Chat()
-          ._printChanges()
       }
     )
   }

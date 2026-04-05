@@ -24,7 +24,7 @@ public extension ChatModel {
   static var mock: ChatModel {
     ChatModel(
       messages: [
-        ChatMessage(text: "This is a question in the chat, this is a question in the chat", role: .user),
+        ChatMessage(text: "This is a question in the chat, this is a question in the chat", role: .user, displayingDate: true),
         ChatMessage(text: "This is an answer from the AI, this is an answer from the AI", role: .ai),
         ChatMessage(text: "This is another question in the chat, this is another question in the chat", role: .user),
         ChatMessage(text: "This is another answer from the AI, this is an answer from the AI", role: .ai),

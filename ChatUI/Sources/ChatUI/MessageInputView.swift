@@ -38,6 +38,16 @@ struct MessageInputView: View {
           .focused($focusedField)
           .multilineTextAlignment(.leading)
           .padding(.leading, 5)
+          .background {
+            GeometryReader { geo in
+              Color.clear
+                .onChange(of: geo.size.height) { oldHeight, newHeight in
+                  if newHeight > oldHeight {
+                    store.send(.textFieldHeightIncreased)
+                  }
+                }
+            }
+          }
         
         Color.clear
           .frame(width: buttonWidth, height: buttonHeight)

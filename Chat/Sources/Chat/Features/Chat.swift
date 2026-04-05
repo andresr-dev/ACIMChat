@@ -12,6 +12,8 @@ public struct Chat {
     public var isTyping = false
     public var scrollPosition: String?
     public let typingIndicatorID = "typing"
+    public var isScrollAtBottom = false
+    public var scrollToLastMessageTaskID: UUID?
     @Presents public var alert: AlertState<Action.Alert>?
     
     public var isShowingSendButton: Bool {
@@ -27,12 +29,15 @@ public struct Chat {
   public enum Action: BindableAction {
     case binding(BindingAction<State>)
     case onAppear
-    case scrollToLastMessage
-    case scrollToTypingIndicator
     case sendMessageButtonPressed
     case aiResponse(Result<ChatMessage, Error>)
     case alert(PresentationAction<Alert>)
     case delegate(Delegate)
+    case scrollToBottom
+    case scrollToTypingIndicator
+    case scrollToLastMessage
+    case isScrollAtBottomChanged(Bool)
+    case textFieldHeightIncreased
     
     public enum Alert: Equatable, Sendable { }
     
@@ -47,23 +52,20 @@ public struct Chat {
   @Dependency(\.aiClient.sendMessage) var sendMessage
   @Dependency(\.uuid) var uuid
   @Dependency(\.date.now) var now
-  @Dependency(\.continuousClock) var clock
   
   public var body: some ReducerOf<Self> {
     BindingReducer()
+      .onChange(of: \.focusedField) { oldValue, state in
+        guard state.focusedField && state.isScrollAtBottom else { return .none }
+        return .run { send in
+          await send(.scrollToBottom)
+        }
+      }
     
     Reduce { state, action in
       switch action {
       case .onAppear:
         state.focusedField = state.chat.messages.isEmpty
-        return .none
-        
-      case .scrollToLastMessage:
-        state.scrollPosition = state.chat.messages.last?.idString
-        return .none
-        
-      case .scrollToTypingIndicator:
-        state.scrollPosition = state.typingIndicatorID
         return .none
         
       case .sendMessageButtonPressed:
@@ -81,18 +83,11 @@ public struct Chat {
         state.text = ""
         let messages = Array(state.chat.messages.suffix(11))
         
-        return .run { [clock, sendMessage] send in
-          await withThrowingTaskGroup(of: Void.self) { group in
-            group.addTask {
-              try await clock.sleep(for: .seconds(0.2))
-              await send(.scrollToTypingIndicator, animation: .default)
-            }
-            group.addTask {
-              await send(.aiResponse(Result {
-                try await sendMessage(messages)
-              }))
-            }
-          }
+        return .run { [sendMessage] send in
+          await send(.scrollToBottom)
+          await send(.aiResponse(Result {
+            try await sendMessage(messages)
+          }))
         }
         
       case let .aiResponse(result):
@@ -103,14 +98,41 @@ public struct Chat {
           state.$chat.withLock {
             $0.messages.append(message)
           }
-          return .run { [clock] send in
-            try await clock.sleep(for: .seconds(0.2))
-            await send(.scrollToLastMessage, animation: .default)
+          return .run { send in
+            await send(.scrollToBottom)
           }
         case .failure:
           state.alert = .error
           return .none
         }
+        
+      case .scrollToBottom:
+        state.scrollPosition = nil
+        
+        return .run { [isTyping = state.isTyping] send in
+          if isTyping {
+            await send(.scrollToTypingIndicator)
+          } else {
+            await send(.scrollToLastMessage)
+          }
+        }
+        
+      case .scrollToLastMessage:
+        state.scrollPosition = state.chat.messages.last?.idString
+        return .none
+        
+      case .scrollToTypingIndicator:
+        state.scrollPosition = state.typingIndicatorID
+        return .none
+        
+      case let .isScrollAtBottomChanged(isScrollAtBottom):
+        state.isScrollAtBottom = isScrollAtBottom
+        return .none
+        
+      case .textFieldHeightIncreased:
+        guard state.isScrollAtBottom else { return .none }
+        state.scrollToLastMessageTaskID = uuid()
+        return .none
         
       case .binding, .alert, .delegate:
         return .none
