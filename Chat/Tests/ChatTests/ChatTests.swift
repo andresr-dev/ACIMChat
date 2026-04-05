@@ -34,6 +34,8 @@ struct ChatTests {
       $0.$chat.messages.withLock { $0 = [userMessage, aiMessage] }
     }
     
+    await store.receive(\.scrollToBottom)
+    
     await store.receive(\.aiResponse.success) {
       $0.isTyping = false
     }
@@ -41,6 +43,10 @@ struct ChatTests {
     
     await store.receive(\.scrollToTypingIndicator) {
       $0.scrollPosition = "typing"
+    }
+    
+    await store.receive(\.scrollToBottom) {
+      $0.scrollPosition = nil
     }
     
     await store.receive(\.scrollToLastMessage) {
@@ -73,6 +79,10 @@ struct ChatTests {
       }
     }
     
+    await store.receive(\.scrollToBottom) {
+      $0.scrollPosition = nil
+    }
+    
     await store.receive(\.aiResponse.success) {
       $0.isTyping = false
     }
@@ -81,6 +91,10 @@ struct ChatTests {
     
     await store.receive(\.scrollToTypingIndicator) {
       $0.scrollPosition = "typing"
+    }
+    
+    await store.receive(\.scrollToBottom) {
+      $0.scrollPosition = nil
     }
     
     await store.receive(\.scrollToLastMessage) {
@@ -135,6 +149,8 @@ struct ChatTests {
     }
     
     await store.receive(\.delegate)
+    
+    await store.receive(\.scrollToBottom)
         
     await store.receive(\.aiResponse) {
       $0.isTyping = false
@@ -142,6 +158,18 @@ struct ChatTests {
     }
     await store.receive(\.scrollToTypingIndicator) {
       $0.scrollPosition = "typing"
+    }
+  }
+  
+  @Test func scrollsToBottomOnTextFieldIncreasedHeight() async throws {
+    let store = getStore()
+    
+    await store.send(.isScrollAtBottomChanged(true)) {
+      $0.isScrollAtBottom = true
+    }
+    
+    await store.send(.textFieldHeightIncreased) {
+      $0.scrollToLastMessageTaskID = UUID(0)
     }
   }
 }

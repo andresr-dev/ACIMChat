@@ -63,12 +63,16 @@ struct RootTests {
       }
     }
     
+    await store.receive(\.path[id: 0].chat.scrollToBottom)
+    
     await store.receive(\.path[id: 0].chat.aiResponse.success) {
       $0.path[id: 0, case: \.chat]?.isTyping = false
       $0.chatList.$chats.withLock { $0 = [updatedChat] }
     }
     
     await store.receive(\.path[id: 0].chat.delegate.chatUpdated)
+    
+    await store.receive(\.path[id: 0].chat.scrollToBottom)
     
     await store.receive(\.path[id: 0].chat.scrollToTypingIndicator) {
       $0.path[id: 0, case: \.chat]?.scrollPosition = "typing"
