@@ -91,6 +91,80 @@ struct RootTests {
     }
   }
   
+  @Test func messageIsDeletedOnCancellationError() async throws {
+    let chat = ChatModel(id: UUID(0))
+    @Shared(.chats) var chats = [chat]
+    let store = getStore(aiClient: .mock(.cancellation))
+    
+    let sharedChat = try #require(Shared($chats[id: chat.id]))
+    
+    await store.send(.chatList(.navigateTo(chatID: chat.id))) {
+      $0.path[id: 0] = .chat(Chat.State(chat: sharedChat))
+    }
+    
+    await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello")))))) {
+      $0.path[id: 0, case: \.chat]?.text = "Hello"
+    }
+    
+    var updatedChat = chat
+    updatedChat.messages = [.mockUserMessage]
+    
+    await store.send(.path(.element(id: 0, action: .chat(.sendMessageButtonPressed)))) {
+      $0.path[id: 0, case: \.chat]?.$chat.withLock { $0.messages = [.mockUserMessage] }
+      $0.path[id: 0, case: \.chat]?.isTyping = true
+      $0.path[id: 0, case: \.chat]?.text = ""
+      $0.path[id: 0, case: \.chat]?.$chat.withLock {
+        $0 = updatedChat
+      }
+    }
+    
+    await store.skipReceivedActions()
+    
+    await store.send(.path(.popFrom(id: 0))) {
+      $0.path = StackState([])
+      $0.chatList.$chats[id: chat.id].withLock {
+        $0?.messages = []
+      }
+    }
+  }
+  
+  @Test func messageIsDeletedOnURLCancellationError() async throws {
+    let chat = ChatModel(id: UUID(0))
+    @Shared(.chats) var chats = [chat]
+    let store = getStore(aiClient: .mock(.urlCancellation))
+    
+    let sharedChat = try #require(Shared($chats[id: chat.id]))
+    
+    await store.send(.chatList(.navigateTo(chatID: chat.id))) {
+      $0.path[id: 0] = .chat(Chat.State(chat: sharedChat))
+    }
+    
+    await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello")))))) {
+      $0.path[id: 0, case: \.chat]?.text = "Hello"
+    }
+    
+    var updatedChat = chat
+    updatedChat.messages = [.mockUserMessage]
+    
+    await store.send(.path(.element(id: 0, action: .chat(.sendMessageButtonPressed)))) {
+      $0.path[id: 0, case: \.chat]?.$chat.withLock { $0.messages = [.mockUserMessage] }
+      $0.path[id: 0, case: \.chat]?.isTyping = true
+      $0.path[id: 0, case: \.chat]?.text = ""
+      $0.path[id: 0, case: \.chat]?.$chat.withLock {
+        $0 = updatedChat
+      }
+    }
+    
+    await store.skipReceivedActions()
+    
+    await store.send(.path(.popFrom(id: 0))) {
+      $0.path = StackState([])
+      $0.chatList.$chats[id: chat.id].withLock {
+        $0?.messages = []
+      }
+    }
+  }
+  
   @Test func updatedChatMovesToTop() async throws {
     let chat1 = ChatModel(id: UUID(0))
     let chat2 = ChatModel(id: UUID(1))
@@ -115,6 +189,7 @@ struct RootTests {
 // MARK: - Helpers
 extension RootTests {
   func getStore(
+    aiClient: AIClient = .mock(.success),
     fileID: StaticString = #fileID,
     file filePath: StaticString = #filePath,
     line: UInt = #line,
@@ -124,7 +199,7 @@ extension RootTests {
       initialState: Root.State(),
       reducer: { Root() },
       withDependencies: {
-        $0.aiClient = AIClient.mock(.success)
+        $0.aiClient = aiClient
         $0.date.now = Date(timeIntervalSince1970: 0)
         $0.continuousClock = .immediate
         $0.uuid = .incrementing

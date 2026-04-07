@@ -101,7 +101,7 @@ extension AIClient {
   
   static let testValue = AIClient()
   
-  enum MockState { case success, failure }
+  enum MockState { case success, failure, cancellation, urlCancellation }
   
   static func mock(_ state: MockState) -> AIClient {
     switch state {
@@ -109,6 +109,10 @@ extension AIClient {
       return AIClient { _ in .mockAIMessage }
     case .failure:
       return AIClient { _ in throw Error.invalidResponse }
+    case .cancellation:
+      return AIClient { _ in throw CancellationError() }
+    case .urlCancellation:
+      return AIClient { _ in throw NSError(domain: NSURLErrorDomain, code: NSURLErrorCancelled) }
     }
   }
 }

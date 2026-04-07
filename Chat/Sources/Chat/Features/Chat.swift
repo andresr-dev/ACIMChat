@@ -16,6 +16,7 @@ public struct Chat {
     public var scrollToLastMessageTaskID: UUID?
     public var showingScrollToBottomButton = false
     @Presents public var alert: AlertState<Action.Alert>?
+    var userMessage: ChatMessage?
     
     public var isShowingSendButton: Bool {
       !text.isEmpty
@@ -81,17 +82,31 @@ public struct Chat {
           displayingDate = !Calendar.current.isDate(now, inSameDayAs: lastMessageDate)
         }
         let message = ChatMessage(id: uuid(), text: text, role: .user, date: now, displayingDate: displayingDate)
-        state.$chat.withLock {
+        _ = state.$chat.withLock {
           $0.messages.append(message)
         }
         state.isTyping = true
         state.text = ""
         let messages = Array(state.chat.messages.suffix(11))
         
-        return .run { [sendMessage] send in
+        return .run { [chatID = state.chat.id, sendMessage] send in
           await send(.scrollToBottom)
           await send(.aiResponse(Result {
-            try await sendMessage(messages)
+            func deleteMessage(_ message: ChatMessage) {
+              @Shared(.chats) var chats
+              _ = $chats[id: chatID].withLock {
+                $0?.messages.remove(message)
+              }
+            }
+            do {
+              return try await sendMessage(messages)
+            } catch let error as NSError where error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled {
+              deleteMessage(message)
+              throw error
+            } catch let error as CancellationError {
+              deleteMessage(message)
+              throw error
+            } catch { throw error }
           }))
         }
         
@@ -100,7 +115,7 @@ public struct Chat {
         
         switch result {
         case let .success(message):
-          state.$chat.withLock {
+          _ = state.$chat.withLock {
             $0.messages.append(message)
           }
           return .run { send in

@@ -5,16 +5,17 @@
 //  Created by Andres Raigoza on 14/03/26.
 //
 
+import ComposableArchitecture
 import Foundation
 
 public struct ChatModel: Equatable, Identifiable, Codable, Sendable {
   public let id: UUID
-  public var messages: [ChatMessage]
+  public var messages: IdentifiedArrayOf<ChatMessage>
   public var title: String {
     messages.last?.text ?? "Nueva Conversación"
   }
   
-  public init(id: UUID = UUID(), messages: [ChatMessage] = []) {
+  public init(id: UUID = UUID(), messages: IdentifiedArrayOf<ChatMessage> = []) {
     self.id = id
     self.messages = messages
   }

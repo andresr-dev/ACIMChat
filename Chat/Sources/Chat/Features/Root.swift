@@ -43,9 +43,12 @@ public struct Root {
     
     Reduce { state, action in
       switch action {
-      case let .path(.element(id: _, action: .chat(.delegate(.chatUpdated(id: chatID))))):
-        moveChatToTop(state: &state, chatID: chatID)
-        return .none
+      case let .path(.element(id: _, action: .chat(.delegate(actionDelegate)))):
+        switch actionDelegate {
+        case let .chatUpdated(id: chatID):
+          moveChatToTop(state: &state, chatID: chatID)
+          return .none
+        }
         
       case let .chatList(.navigateTo(chatID: chatID)):
         guard let chat = Shared(state.chatList.$chats[id: chatID]) else {
@@ -61,7 +64,7 @@ public struct Root {
     .forEach(\.path, action: \.path)
   }
   
-  func moveChatToTop(state: inout State, chatID: ChatModel.ID) {
+  private func moveChatToTop(state: inout State, chatID: ChatModel.ID) {
     guard let index = state.chatList.chats.index(id: chatID),
           index > 0 else {
       return

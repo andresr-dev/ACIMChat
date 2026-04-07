@@ -141,7 +141,6 @@ struct ChatTests {
     }
        
     let userMessage = ChatMessage.mockUserMessage
-    
     await store.send(.sendMessageButtonPressed) {
       $0.$chat.messages.withLock { $0 = [userMessage] }
       $0.isTyping = true
@@ -149,9 +148,7 @@ struct ChatTests {
     }
     
     await store.receive(\.delegate)
-    
     await store.receive(\.scrollToBottom)
-        
     await store.receive(\.aiResponse) {
       $0.isTyping = false
       $0.alert = .error
@@ -169,7 +166,6 @@ struct ChatTests {
     }
     
     await store.receive(\.updateShowingScrollToBottomButton)
-    
     await store.send(.textFieldHeightIncreased) {
       $0.scrollToLastMessageTaskID = UUID(0)
     }
@@ -182,13 +178,10 @@ struct ChatTests {
     await store.send(.isScrollAtBottomChanged(true)) {
       $0.isScrollAtBottom = true
     }
-    
     await store.receive(\.updateShowingScrollToBottomButton)
-    
     await store.send(.isScrollAtBottomChanged(false)) {
       $0.isScrollAtBottom = false
     }
-    
     await store.receive(\.updateShowingScrollToBottomButton) {
       $0.showingScrollToBottomButton = true
     }
