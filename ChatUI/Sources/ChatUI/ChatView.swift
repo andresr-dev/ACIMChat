@@ -51,7 +51,7 @@ public struct ChatView: View {
         .onScrollGeometryChange(for: Bool.self, of: { geo in
           let bottomOffsetY = geo.contentOffset.y + geo.visibleRect.height
           let contentHeight = geo.contentSize.height
-          return bottomOffsetY > contentHeight - 2
+          return bottomOffsetY > contentHeight - 30
         }, action: { wasScrollAtBottom, isScrollAtBottom in
           store.send(.isScrollAtBottomChanged(isScrollAtBottom))
         })
@@ -63,6 +63,22 @@ public struct ChatView: View {
         .background {
           Color(.systemBackground)
             .ignoresSafeArea()
+        }
+        .overlay(alignment: .topTrailing) {
+          if store.showingScrollToBottomButton {
+            Button {
+              store.send(.scrollToBottomButtonPressed)
+            } label: {
+              Image(systemName: "chevron.down")
+                .font(.system(size: 18, weight: .semibold))
+                .frame(width: 34, height: 34)
+            }
+            .tint(.primary)
+            .glassEffect(.regular.interactive(), in: .circle)
+            .padding(.trailing, 10)
+            .offset(y: -60)
+            .transition(.opacity.animation(.default))
+          }
         }
     }
     .navigationTitle("UCDM")

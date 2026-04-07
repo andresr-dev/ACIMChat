@@ -5,7 +5,7 @@ import Foundation
 @Reducer
 public struct Chat {
   @ObservableState
-  public struct State: Equatable {
+  public struct State: Equatable, Sendable {
     @Shared public var chat: ChatModel
     public var text: String
     public var focusedField = false
@@ -14,6 +14,7 @@ public struct Chat {
     public let typingIndicatorID = "typing"
     public var isScrollAtBottom = false
     public var scrollToLastMessageTaskID: UUID?
+    public var showingScrollToBottomButton = false
     @Presents public var alert: AlertState<Action.Alert>?
     
     public var isShowingSendButton: Bool {
@@ -33,11 +34,13 @@ public struct Chat {
     case aiResponse(Result<ChatMessage, Error>)
     case alert(PresentationAction<Alert>)
     case delegate(Delegate)
+    case scrollToBottomButtonPressed
     case scrollToBottom
     case scrollToTypingIndicator
     case scrollToLastMessage
     case isScrollAtBottomChanged(Bool)
     case textFieldHeightIncreased
+    case updateShowingScrollToBottomButton(isShowing: Bool)
     
     public enum Alert: Equatable, Sendable { }
     
@@ -52,6 +55,8 @@ public struct Chat {
   @Dependency(\.aiClient.sendMessage) var sendMessage
   @Dependency(\.uuid) var uuid
   @Dependency(\.date.now) var now
+  @Dependency(\.continuousClock) var clock
+  enum CancelID { case scrollToBottomButton }
   
   public var body: some ReducerOf<Self> {
     BindingReducer()
@@ -106,7 +111,11 @@ public struct Chat {
           return .none
         }
         
+      case .scrollToBottomButtonPressed:
+        return .send(.scrollToBottom)
+        
       case .scrollToBottom:
+        state.showingScrollToBottomButton = false
         state.scrollPosition = nil
         
         return .run { [isTyping = state.isTyping] send in
@@ -127,11 +136,26 @@ public struct Chat {
         
       case let .isScrollAtBottomChanged(isScrollAtBottom):
         state.isScrollAtBottom = isScrollAtBottom
-        return .none
+        
+        return .run { [clock] send in
+          if !isScrollAtBottom {
+            try await withTaskCancellation(id: CancelID.scrollToBottomButton, cancelInFlight: true) {
+              try await clock.sleep(for: .seconds(1))
+              await send(.updateShowingScrollToBottomButton(isShowing: true))
+            }
+          } else {
+            Task.cancel(id: CancelID.scrollToBottomButton)
+            await send(.updateShowingScrollToBottomButton(isShowing: false))
+          }
+        }
         
       case .textFieldHeightIncreased:
         guard state.isScrollAtBottom else { return .none }
         state.scrollToLastMessageTaskID = uuid()
+        return .none
+        
+      case let .updateShowingScrollToBottomButton(isShowing):
+        state.showingScrollToBottomButton = isShowing
         return .none
         
       case .binding, .alert, .delegate:

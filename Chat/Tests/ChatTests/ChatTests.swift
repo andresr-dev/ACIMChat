@@ -168,8 +168,29 @@ struct ChatTests {
       $0.isScrollAtBottom = true
     }
     
+    await store.receive(\.updateShowingScrollToBottomButton)
+    
     await store.send(.textFieldHeightIncreased) {
       $0.scrollToLastMessageTaskID = UUID(0)
+    }
+  }
+  
+  @Test func showsScrollToBottomButton() async throws {
+    let chat = ChatModel(messages: [.mockUserMessage, .mockAIMessage])
+    let store = getStore(chat: Shared(value: chat))
+    
+    await store.send(.isScrollAtBottomChanged(true)) {
+      $0.isScrollAtBottom = true
+    }
+    
+    await store.receive(\.updateShowingScrollToBottomButton)
+    
+    await store.send(.isScrollAtBottomChanged(false)) {
+      $0.isScrollAtBottom = false
+    }
+    
+    await store.receive(\.updateShowingScrollToBottomButton) {
+      $0.showingScrollToBottomButton = true
     }
   }
 }
