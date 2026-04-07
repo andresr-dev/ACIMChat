@@ -38,8 +38,16 @@ public struct ChatView: View {
         }
         .listStyle(.plain)
         .listRowSpacing(12)
+        .animation(.default, value: store.chat.messages)
         .scrollDismissesKeyboard(.interactively)
         .defaultScrollAnchor(.bottom)
+        .onScrollGeometryChange(for: Bool.self, of: { geo in
+          let bottomOffsetY = geo.contentOffset.y + geo.visibleRect.height
+          let contentHeight = geo.contentSize.height
+          return bottomOffsetY > contentHeight - 30
+        }, action: { wasScrollAtBottom, isScrollAtBottom in
+          store.send(.isScrollAtBottomChanged(isScrollAtBottom))
+        })
         .task(id: store.scrollToLastMessageTaskID) {
           proxy.scrollTo(store.chat.messages.last?.idString, anchor: .bottom)
         }
@@ -48,13 +56,6 @@ public struct ChatView: View {
             proxy.scrollTo(newValue, anchor: .bottom)
           }
         }
-        .onScrollGeometryChange(for: Bool.self, of: { geo in
-          let bottomOffsetY = geo.contentOffset.y + geo.visibleRect.height
-          let contentHeight = geo.contentSize.height
-          return bottomOffsetY > contentHeight - 30
-        }, action: { wasScrollAtBottom, isScrollAtBottom in
-          store.send(.isScrollAtBottomChanged(isScrollAtBottom))
-        })
       }
       
       MessageInputView(store: store)
@@ -77,7 +78,10 @@ public struct ChatView: View {
             .glassEffect(.regular.interactive(), in: .circle)
             .padding(.trailing, 10)
             .offset(y: -60)
-            .transition(.opacity.animation(.default))
+            .transition(.asymmetric(
+              insertion: .opacity.animation(.default),
+              removal: .identity
+            ))
           }
         }
     }
