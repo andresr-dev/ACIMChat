@@ -95,7 +95,10 @@ public struct ChatView: View {
   NavigationStack {
     ChatView(
       store: Store(
-        initialState: Chat.State(chat: Shared(value: ChatModel()))
+        initialState: Chat.State(
+          chat: Shared(value: ChatModel()),
+          text: "Hello"
+        )
       ) {
         Chat()
       }
@@ -107,7 +110,10 @@ public struct ChatView: View {
   NavigationStack {
     ChatView(
       store: Store(
-        initialState: Chat.State(chat: Shared(value: ChatModel()))
+        initialState: Chat.State(
+          chat: Shared(value: ChatModel()),
+          text: "Hello"
+        )
       ) {
         Chat()
       } withDependencies: {

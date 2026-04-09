@@ -1,0 +1,80 @@
+//
+//  LiveAIClient.swift
+//  Chat
+//
+//  Created by Andres Raigoza on 9/04/26.
+//
+
+import ComposableArchitecture
+import Foundation
+
+extension AIClient: DependencyKey {
+  public static let liveValue = AIClient(
+    sendMessage: { messages in
+      let url = URL(string: "https://us-central1-acim-chat.cloudfunctions.net/askACIM")
+      guard let url else {
+        throw Error.invalidURL
+      }
+      var request = URLRequest(url: url)
+      request.httpMethod = "POST"
+      request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+      guard let question = messages.last?.text else {
+        throw Error.invalidQuestion
+      }
+      let history = messages.map(RequestChatMessage.init)
+      
+      let body = Request(
+        question: question,
+        language: "es",
+        history: history
+      )
+      request.httpBody = try JSONEncoder().encode(body)
+      
+      let (data, response) = try await URLSession.shared.data(for: request)
+      
+      guard let httpResponse = response as? HTTPURLResponse else {
+        throw Error.invalidResponse
+      }
+      guard (200...299).contains(httpResponse.statusCode) else {
+        throw Error.serverError(httpResponse.statusCode)
+      }
+      let decoder = JSONDecoder()
+      decoder.keyDecodingStrategy = .convertFromSnakeCase
+      do {
+        let response = try decoder.decode(Response.self, from: data)
+        return ChatMessage(text: response.answer, role: .ai)
+      } catch {
+        throw Error.decodingError(error)
+      }
+    }
+  )
+  
+  private struct Response: Decodable {
+    let answer: String
+    let passagesUsed: Int
+  }
+  
+  private struct Request: Encodable {
+    let question: String
+    let language: String
+    let history: [RequestChatMessage]
+  }
+  
+  private struct RequestChatMessage: Encodable {
+    let role: String
+    let content: String
+    
+    init(message: ChatMessage) {
+      self.role = message.role.rawValue
+      self.content = message.text
+    }
+  }
+  
+  enum Error: Swift.Error {
+    case invalidURL
+    case invalidResponse
+    case invalidQuestion
+    case serverError(Int)
+    case decodingError(Swift.Error)
+  }
+}
