@@ -11,7 +11,6 @@ struct MessageView: View {
         Text(message.date.formatted(date: .abbreviated, time: .omitted))
           .font(.caption)
           .foregroundStyle(.secondary)
-          .textSelection(.enabled)
       }
       
       HStack(alignment: .bottom) {
@@ -27,6 +26,7 @@ struct MessageView: View {
         let alignment = message.role == .ai ? Alignment.leading : .trailing
         
         Text(message.text)
+          .textSelection(.enabled)
           .foregroundStyle(message.role == .ai ? Color.primary : .white)
           .padding(12)
           .background(message.role == .ai ? Color(.secondarySystemBackground) : Color(.accent))
