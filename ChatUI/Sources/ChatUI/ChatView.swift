@@ -91,13 +91,27 @@ public struct ChatView: View {
   }
 }
 
-#Preview {
+#Preview("Success") {
   NavigationStack {
     ChatView(
       store: Store(
-        initialState: Chat.State(chat: Shared(value: .mock))
+        initialState: Chat.State(chat: Shared(value: ChatModel()))
       ) {
         Chat()
+      }
+    )
+  }
+}
+
+#Preview("Failure") {
+  NavigationStack {
+    ChatView(
+      store: Store(
+        initialState: Chat.State(chat: Shared(value: ChatModel()))
+      ) {
+        Chat()
+      } withDependencies: {
+        $0.aiClient = .mock(.failure)
       }
     )
   }

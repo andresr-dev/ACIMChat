@@ -43,7 +43,10 @@ public struct Chat {
     case textFieldHeightIncreased
     case updateShowingScrollToBottomButton(isShowing: Bool)
     
-    public enum Alert: Equatable, Sendable { }
+    @CasePathable
+    public enum Alert: Equatable, Sendable {
+      case confirm
+    }
     
     @CasePathable
     public enum Delegate: Equatable {
@@ -173,6 +176,14 @@ public struct Chat {
         state.showingScrollToBottomButton = isShowing
         return .none
         
+      case .alert(.presented(.confirm)):
+        if let lastMessage = state.chat.messages.last, lastMessage.role == .user {
+          _ = state.$chat.withLock {
+            $0.messages.remove(lastMessage)
+          }
+        }
+        return .none
+        
       case .binding, .alert, .delegate:
         return .none
       }
@@ -187,6 +198,10 @@ public struct Chat {
 extension AlertState where Action == Chat.Action.Alert {
   static let error = Self {
     TextState("Error")
+  } actions: {
+    ButtonState(role: .cancel, action: .confirm) {
+      TextState("OK")
+    }
   } message: {
     TextState("Por favor espera un momento e intenta de nuevo.")
   }

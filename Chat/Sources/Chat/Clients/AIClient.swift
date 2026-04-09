@@ -9,24 +9,24 @@ import ComposableArchitecture
 import Foundation
 
 @DependencyClient
-struct AIClient {
+public struct AIClient: Sendable {
   var sendMessage: @Sendable ([ChatMessage]) async throws -> ChatMessage
 }
 
 extension DependencyValues {
-  nonisolated var aiClient: AIClient {
+  public var aiClient: AIClient {
     get { self[AIClient.self] }
     set { self[AIClient.self] = newValue }
   }
 }
 
 extension AIClient {
-  nonisolated private struct Response: Decodable {
+  private struct Response: Decodable {
     let answer: String
     let passagesUsed: Int
   }
   
-  nonisolated struct Request: Encodable {
+  struct Request: Encodable {
     let question: String
     let language: String
     let history: [RequestChatMessage]
@@ -52,7 +52,7 @@ extension AIClient {
 }
 
 extension AIClient: DependencyKey {
-  static let liveValue = AIClient(
+  public static let liveValue = AIClient(
     sendMessage: { messages in
       let url = URL(string: "https://us-central1-acim-chat.cloudfunctions.net/askACIM")
       guard let url else {
@@ -93,7 +93,7 @@ extension AIClient: DependencyKey {
   )
 }
 
-extension AIClient {
+public extension AIClient {
   static let previewValue = AIClient { question in
     try await Task.sleep(for: .seconds(2))
     return ChatMessage(id: UUID(), text: "Hello there!", role: .ai, date: .now)

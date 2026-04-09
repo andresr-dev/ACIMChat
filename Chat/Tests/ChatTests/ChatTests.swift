@@ -133,7 +133,7 @@ struct ChatTests {
     }
   }
   
-  @Test func presentsAlertOnAIResponseError() async throws {
+  @Test func deletesMessageOnAIResponseError() async throws {
     let store = getStore(aiClient: .mock(.failure))
     
     await store.send(.binding(.set(\.text, "Hello"))) {
@@ -147,7 +147,7 @@ struct ChatTests {
       $0.text = ""
     }
     
-    await store.receive(\.delegate)
+    await store.receive(\.delegate.chatUpdated)
     await store.receive(\.scrollToBottom)
     await store.receive(\.aiResponse) {
       $0.isTyping = false
@@ -156,6 +156,12 @@ struct ChatTests {
     await store.receive(\.scrollToTypingIndicator) {
       $0.scrollPosition = "typing"
     }
+    
+    await store.send(.alert(.presented(.confirm))) {
+      $0.$chat.withLock { $0.messages = [] }
+      $0.alert = nil
+    }
+    await store.receive(\.delegate.chatUpdated)
   }
   
   @Test func scrollsToBottomOnTextFieldIncreasedHeight() async throws {
