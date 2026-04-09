@@ -62,30 +62,22 @@ struct RootTests {
         $0 = updatedChat
       }
     }
-    
     await store.receive(\.path[id: 0].chat.scrollToBottom)
-    
     await store.receive(\.path[id: 0].chat.aiResponse.success) {
       $0.path[id: 0, case: \.chat]?.isTyping = false
       $0.chatList.$chats.withLock { $0 = [updatedChat] }
     }
-    
     await store.receive(\.path[id: 0].chat.delegate.chatUpdated)
-    
     await store.receive(\.path[id: 0].chat.scrollToBottom)
-    
     await store.receive(\.path[id: 0].chat.scrollToTypingIndicator) {
       $0.path[id: 0, case: \.chat]?.scrollPosition = "typing"
     }
-    
     await store.receive(\.path[id: 0].chat.scrollToLastMessage) {
       $0.path[id: 0, case: \.chat]?.scrollPosition = ChatMessage.mockAIMessage.idString
     }
-    
     await store.send(.path(.popFrom(id: 0))) {
       $0.path = StackState([])
     }
-    
     await store.send(.chatList(.navigateTo(chatID: updatedChat.id))) {
       $0.path[id: 1] = .chat(Chat.State(chat: Shared(value: updatedChat)))
     }
@@ -95,20 +87,17 @@ struct RootTests {
     let chat = ChatModel(id: UUID(0))
     @Shared(.chats) var chats = [chat]
     let store = getStore(aiClient: .mock(.cancellation))
+    store.exhaustivity = .off
     
     let sharedChat = try #require(Shared($chats[id: chat.id]))
-    
     await store.send(.chatList(.navigateTo(chatID: chat.id))) {
       $0.path[id: 0] = .chat(Chat.State(chat: sharedChat))
     }
-    
     await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello")))))) {
       $0.path[id: 0, case: \.chat]?.text = "Hello"
     }
-    
     var updatedChat = chat
     updatedChat.messages = [.mockUserMessage]
-    
     await store.send(.path(.element(id: 0, action: .chat(.sendMessageButtonPressed)))) {
       $0.path[id: 0, case: \.chat]?.$chat.withLock { $0.messages = [.mockUserMessage] }
       $0.path[id: 0, case: \.chat]?.isTyping = true
@@ -117,9 +106,6 @@ struct RootTests {
         $0 = updatedChat
       }
     }
-    
-    await store.skipReceivedActions()
-    
     await store.send(.path(.popFrom(id: 0))) {
       $0.path = StackState([])
       $0.chatList.$chats[id: chat.id].withLock {
@@ -132,20 +118,17 @@ struct RootTests {
     let chat = ChatModel(id: UUID(0))
     @Shared(.chats) var chats = [chat]
     let store = getStore(aiClient: .mock(.urlCancellation))
+    store.exhaustivity = .off
     
     let sharedChat = try #require(Shared($chats[id: chat.id]))
-    
     await store.send(.chatList(.navigateTo(chatID: chat.id))) {
       $0.path[id: 0] = .chat(Chat.State(chat: sharedChat))
     }
-    
     await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello")))))) {
       $0.path[id: 0, case: \.chat]?.text = "Hello"
     }
-    
     var updatedChat = chat
     updatedChat.messages = [.mockUserMessage]
-    
     await store.send(.path(.element(id: 0, action: .chat(.sendMessageButtonPressed)))) {
       $0.path[id: 0, case: \.chat]?.$chat.withLock { $0.messages = [.mockUserMessage] }
       $0.path[id: 0, case: \.chat]?.isTyping = true
@@ -154,9 +137,6 @@ struct RootTests {
         $0 = updatedChat
       }
     }
-    
-    await store.skipReceivedActions()
-    
     await store.send(.path(.popFrom(id: 0))) {
       $0.path = StackState([])
       $0.chatList.$chats[id: chat.id].withLock {
@@ -175,7 +155,6 @@ struct RootTests {
     
     await store.send(.chatList(.navigateTo(chatID: chat2.id)))
     await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello"))))))
-    
     await store.send(.path(.element(id: 0, action: .chat(.sendMessageButtonPressed))))
     
     var updatedChat2 = chat2

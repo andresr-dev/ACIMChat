@@ -29,30 +29,23 @@ struct ChatTests {
       $0.isTyping = true
       $0.text = ""
     }
-    
     await store.receive(\.delegate) {
       $0.$chat.messages.withLock { $0 = [userMessage, aiMessage] }
     }
-    
     await store.receive(\.scrollToBottom)
-    
     await store.receive(\.aiResponse.success) {
       $0.isTyping = false
     }
     await store.receive(\.delegate)
-    
     await store.receive(\.scrollToTypingIndicator) {
       $0.scrollPosition = "typing"
     }
-    
     await store.receive(\.scrollToBottom) {
       $0.scrollPosition = nil
     }
-    
     await store.receive(\.scrollToLastMessage) {
       $0.scrollPosition = aiMessage.idString
     }
-    
     await store.send(.binding(.set(\.text, "Hello Again!"))) {
       $0.text = "Hello Again!"
     }
@@ -78,25 +71,19 @@ struct ChatTests {
         $0 = [userMessage, aiMessage, secondUserMessage, secondAIResponse]
       }
     }
-    
     await store.receive(\.scrollToBottom) {
       $0.scrollPosition = nil
     }
-    
     await store.receive(\.aiResponse.success) {
       $0.isTyping = false
     }
-    
     await store.receive(\.delegate)
-    
     await store.receive(\.scrollToTypingIndicator) {
       $0.scrollPosition = "typing"
     }
-    
     await store.receive(\.scrollToBottom) {
       $0.scrollPosition = nil
     }
-    
     await store.receive(\.scrollToLastMessage) {
       $0.scrollPosition = secondAIResponse.idString
     }
@@ -156,7 +143,6 @@ struct ChatTests {
     await store.receive(\.scrollToTypingIndicator) {
       $0.scrollPosition = "typing"
     }
-    
     await store.send(.alert(.presented(.confirm))) {
       $0.$chat.withLock { $0.messages = [] }
       $0.alert = nil
@@ -170,7 +156,6 @@ struct ChatTests {
     await store.send(.isScrollAtBottomChanged(true)) {
       $0.isScrollAtBottom = true
     }
-    
     await store.receive(\.updateShowingScrollToBottomButton)
     await store.send(.textFieldHeightIncreased) {
       $0.scrollToLastMessageTaskID = UUID(0)

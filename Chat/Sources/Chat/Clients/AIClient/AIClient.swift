@@ -21,34 +21,26 @@ extension DependencyValues {
 }
 
 extension AIClient: TestDependencyKey {
-  public static let previewValue = mock(.success)
+  public static let previewValue = AIClient { _ in
+    try await Task.sleep(for: .seconds(1))
+    return .mockAIMessage
+  }
   
-  public static let testValue = AIClient()
+  public static let testValue = mock(.success)
   
   public enum MockState { case success, failure, cancellation, urlCancellation }
   
   public static func mock(_ state: MockState) -> AIClient {
     switch state {
     case .success:
-      return AIClient { _ in
-        try await Task.sleep(for: .seconds(1))
-        return .mockAIMessage
+      return AIClient { _ in .mockAIMessage
       }
     case .failure:
-      return AIClient { _ in
-        try await Task.sleep(for: .seconds(1))
-        throw Error.invalidResponse
-      }
+      return AIClient { _ in throw Error.invalidResponse }
     case .cancellation:
-      return AIClient { _ in
-        try await Task.sleep(for: .seconds(1))
-        throw CancellationError()
-      }
+      return AIClient { _ in throw CancellationError() }
     case .urlCancellation:
-      return AIClient { _ in
-        try await Task.sleep(for: .seconds(1))
-        throw NSError(domain: NSURLErrorDomain, code: NSURLErrorCancelled)
-      }
+      return AIClient { _ in throw NSError(domain: NSURLErrorDomain, code: NSURLErrorCancelled) }
     }
   }
 }
