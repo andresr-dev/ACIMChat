@@ -10,7 +10,7 @@ import Chat
 import SwiftUI
 
 struct ChatListView: View {
-  @Bindable var store: StoreOf<ChatList>
+  @Bindable var store: StoreOf<ChatListFeature>
   
   var body: some View {
     List {
@@ -51,9 +51,9 @@ struct ChatListView: View {
   NavigationStack {
     ChatListView(
       store: Store(
-        initialState: ChatList.State()
+        initialState: ChatListFeature.State()
       ) {
-        ChatList()
+        ChatListFeature()
       }
     )
   }

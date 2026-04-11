@@ -21,7 +21,7 @@ struct RootTests {
     let sharedChat = try #require(Shared($chats[id: chat.id]))
     
     await store.send(.chatList(.navigateTo(chatID: chat.id))) {
-      $0.path[id: 0] = .chat(Chat.State(chat: sharedChat))
+      $0.path[id: 0] = .chat(ChatFeature.State(chat: sharedChat))
     }
     
     await store.send(.path(.popFrom(id: 0))) {
@@ -37,7 +37,7 @@ struct RootTests {
     let sharedChat = try #require(Shared($chats[id: chat.id]))
     
     await store.send(.chatList(.navigateTo(chatID: chat.id))) {
-      $0.path[id: 0] = .chat(Chat.State(chat: sharedChat))
+      $0.path[id: 0] = .chat(ChatFeature.State(chat: sharedChat))
     }
     
     await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello")))))) {
@@ -79,7 +79,7 @@ struct RootTests {
       $0.path = StackState([])
     }
     await store.send(.chatList(.navigateTo(chatID: updatedChat.id))) {
-      $0.path[id: 1] = .chat(Chat.State(chat: Shared(value: updatedChat)))
+      $0.path[id: 1] = .chat(ChatFeature.State(chat: Shared(value: updatedChat)))
     }
   }
   
@@ -91,7 +91,7 @@ struct RootTests {
     
     let sharedChat = try #require(Shared($chats[id: chat.id]))
     await store.send(.chatList(.navigateTo(chatID: chat.id))) {
-      $0.path[id: 0] = .chat(Chat.State(chat: sharedChat))
+      $0.path[id: 0] = .chat(ChatFeature.State(chat: sharedChat))
     }
     await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello")))))) {
       $0.path[id: 0, case: \.chat]?.text = "Hello"
@@ -122,7 +122,7 @@ struct RootTests {
     
     let sharedChat = try #require(Shared($chats[id: chat.id]))
     await store.send(.chatList(.navigateTo(chatID: chat.id))) {
-      $0.path[id: 0] = .chat(Chat.State(chat: sharedChat))
+      $0.path[id: 0] = .chat(ChatFeature.State(chat: sharedChat))
     }
     await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello")))))) {
       $0.path[id: 0, case: \.chat]?.text = "Hello"
@@ -173,10 +173,10 @@ extension RootTests {
     file filePath: StaticString = #filePath,
     line: UInt = #line,
     column: UInt = #column
-  ) -> TestStoreOf<Root> {
+  ) -> TestStoreOf<RootFeature> {
     TestStore(
-      initialState: Root.State(),
-      reducer: { Root() },
+      initialState: RootFeature.State(),
+      reducer: { RootFeature() },
       withDependencies: {
         $0.aiClient = aiClient
         $0.date.now = Date(timeIntervalSince1970: 0)

@@ -1,5 +1,5 @@
 //
-//  ChatList.swift
+//  ChatListFeature.swift
 //  Chat
 //
 //  Created by Andres Raigoza on 25/03/26.
@@ -9,8 +9,7 @@ import ComposableArchitecture
 import Foundation
 
 @Reducer
-public struct ChatList {
-  
+public struct ChatListFeature {
   @ObservableState
   public struct State: Equatable {
     @Shared(.chats) public var chats: IdentifiedArrayOf<ChatModel>

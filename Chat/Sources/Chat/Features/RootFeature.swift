@@ -1,5 +1,5 @@
 //
-//  Root.swift
+//  RootFeature.swift
 //  Chat
 //
 //  Created by Andres Raigoza on 26/03/26.
@@ -8,22 +8,22 @@
 import ComposableArchitecture
 import Foundation
 
-extension Root.Path.State: Equatable { }
+extension RootFeature.Path.State: Equatable { }
 
 @Reducer
-public struct Root {
+public struct RootFeature {
   @Reducer
   public enum Path {
-    case chat(Chat)
+    case chat(ChatFeature)
   }
   
   @ObservableState
   public struct State: Equatable {
     public var path: StackState<Path.State>
-    public var chatList: ChatList.State
+    public var chatList: ChatListFeature.State
     @SharedReader(.chats) var chats
     
-    public init(path: StackState<Path.State> = StackState(), chatList: ChatList.State = ChatList.State()) {
+    public init(path: StackState<Path.State> = StackState(), chatList: ChatListFeature.State = ChatListFeature.State()) {
       self.path = path
       self.chatList = chatList
     }
@@ -31,14 +31,14 @@ public struct Root {
   
   public enum Action {
     case path(StackActionOf<Path>)
-    case chatList(ChatList.Action)
+    case chatList(ChatListFeature.Action)
   }
   
   public init() { }
   
   public var body: some ReducerOf<Self> {
     Scope(state: \.chatList, action: \.chatList) {
-      ChatList()
+      ChatListFeature()
     }
     
     Reduce { state, action in
@@ -54,7 +54,7 @@ public struct Root {
         guard let chat = Shared(state.chatList.$chats[id: chatID]) else {
           return .none
         }
-        state.path = StackState([.chat(Chat.State(chat: chat))])
+        state.path = StackState([.chat(ChatFeature.State(chat: chat))])
         return .none
         
       case .path, .chatList:

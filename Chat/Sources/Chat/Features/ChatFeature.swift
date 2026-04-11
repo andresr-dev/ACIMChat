@@ -3,7 +3,7 @@ import ComposableArchitecture
 import Foundation
 
 @Reducer
-public struct Chat {
+public struct ChatFeature {
   @ObservableState
   public struct State: Equatable, Sendable {
     @Shared public var chat: ChatModel
@@ -195,7 +195,7 @@ public struct Chat {
   }
 }
 
-extension AlertState where Action == Chat.Action.Alert {
+extension AlertState where Action == ChatFeature.Action.Alert {
   static let error = Self {
     TextState("Error")
   } actions: {

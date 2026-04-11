@@ -10,10 +10,10 @@ import ComposableArchitecture
 import SwiftUI
 
 public struct ChatView: View {
-  @Bindable var store: StoreOf<Chat>
+  @Bindable var store: StoreOf<ChatFeature>
   private let rowInsets = EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
   
-  public init(store: StoreOf<Chat>) {
+  public init(store: StoreOf<ChatFeature>) {
     self.store = store
   }
   
@@ -95,12 +95,12 @@ public struct ChatView: View {
   NavigationStack {
     ChatView(
       store: Store(
-        initialState: Chat.State(
+        initialState: ChatFeature.State(
           chat: Shared(value: ChatModel()),
           text: "Hello"
         )
       ) {
-        Chat()
+        ChatFeature()
       }
     )
   }
@@ -110,12 +110,12 @@ public struct ChatView: View {
   NavigationStack {
     ChatView(
       store: Store(
-        initialState: Chat.State(
+        initialState: ChatFeature.State(
           chat: Shared(value: ChatModel()),
           text: "Hello"
         )
       ) {
-        Chat()
+        ChatFeature()
       } withDependencies: {
         $0.aiClient = .mock(.failure)
       }

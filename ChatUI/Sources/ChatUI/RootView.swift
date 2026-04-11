@@ -10,9 +10,9 @@ import ComposableArchitecture
 import SwiftUI
 
 public struct RootView: View {
-  @Bindable var store: StoreOf<Root>
+  @Bindable var store: StoreOf<RootFeature>
   
-  public init(store: StoreOf<Root>) {
+  public init(store: StoreOf<RootFeature>) {
     self.store = store
   }
   
@@ -31,8 +31,8 @@ public struct RootView: View {
 
 #Preview {
   RootView(
-    store: Store(initialState: Root.State()) {
-      Root()
+    store: Store(initialState: RootFeature.State()) {
+      RootFeature()
         ._printChanges()
     }
   )

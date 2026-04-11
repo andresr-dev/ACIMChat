@@ -189,10 +189,10 @@ extension ChatTests {
     file filePath: StaticString = #filePath,
     line: UInt = #line,
     column: UInt = #column
-  ) -> TestStore<Chat.State, Chat.Action> {
+  ) -> TestStore<ChatFeature.State, ChatFeature.Action> {
     TestStore(
-      initialState: Chat.State(chat: chat, text: text),
-      reducer: { Chat() },
+      initialState: ChatFeature.State(chat: chat, text: text),
+      reducer: { ChatFeature() },
       withDependencies: {
         $0.uuid = .incrementing
         $0.continuousClock = .immediate

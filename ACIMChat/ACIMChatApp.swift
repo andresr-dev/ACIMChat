@@ -14,8 +14,8 @@ import ComposableArchitecture
 struct ACIMChatApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
   
-  @State private var store = Store(initialState: Root.State()) {
-    Root()
+  @State private var store = Store(initialState: RootFeature.State()) {
+    RootFeature()
       ._printChanges()
   }
   

@@ -5,7 +5,7 @@
 //  Created by Andres Raigoza on 9/04/26.
 //
 
-import ComposableArchitecture
+import Dependencies
 import Foundation
 
 extension AIClient: DependencyKey {
