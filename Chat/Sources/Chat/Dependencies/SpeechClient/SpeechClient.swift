@@ -10,7 +10,7 @@ import Foundation
 
 @DependencyClient
 struct SpeechClient {
-  var speak: @Sendable (_ text: String, _ language: String) async throws -> Bool = { _, _ in false }
+  var speak: @Sendable (_ text: String, _ language: String) async throws -> Void
   var stop: @Sendable () async -> Void
 }
 

@@ -51,7 +51,7 @@ public struct RootFeature {
         }
         
       case let .chatList(.navigateTo(chatID: chatID)):
-        guard let chat = Shared(state.chatList.$chats[id: chatID]) else {
+        guard let chat = state.chatList.chats[id: chatID] else {
           return .none
         }
         state.path = StackState([.chat(ChatFeature.State(chat: chat))])

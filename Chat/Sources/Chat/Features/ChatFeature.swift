@@ -5,8 +5,9 @@ import Foundation
 @Reducer
 public struct ChatFeature {
   @ObservableState
-  public struct State: Equatable, Sendable {
-    @Shared public var chat: ChatModel
+  public struct State: Equatable {
+    public let id: UUID
+    public var messages: IdentifiedArrayOf<MessageFeature.State>
     public var text: String
     public var focusedField = false
     public var isTyping = false
@@ -16,19 +17,23 @@ public struct ChatFeature {
     public var scrollToLastMessageTaskID: UUID?
     public var showingScrollToBottomButton = false
     @Presents public var alert: AlertState<Action.Alert>?
-    var userMessage: ChatMessage?
     
     public var isShowingSendButton: Bool {
       !text.isEmpty
     }
     
-    public init(chat: Shared<ChatModel>, text: String = "") {
-      self._chat = chat
+    public init(chat: ChatModel, text: String = "") {
+      self.id = chat.id
+      let messages = chat.messages.map {
+        MessageFeature.State(message: $0)
+      }
+      self.messages = IdentifiedArray(uniqueElements: messages)
       self.text = text
     }
   }
   
   public enum Action: BindableAction {
+    case messages(IdentifiedActionOf<MessageFeature>)
     case binding(BindingAction<State>)
     case onAppear
     case sendMessageButtonPressed
@@ -42,6 +47,7 @@ public struct ChatFeature {
     case isScrollAtBottomChanged(Bool)
     case textFieldHeightIncreased
     case updateShowingScrollToBottomButton(isShowing: Bool)
+    case deleteMessage(id: UUID)
     
     @CasePathable
     public enum Alert: Equatable, Sendable {
@@ -73,54 +79,51 @@ public struct ChatFeature {
     
     Reduce { state, action in
       switch action {
+      case .messages:
+        return .none
+        
       case .onAppear:
-        state.focusedField = state.chat.messages.isEmpty
+        state.focusedField = state.messages.isEmpty
         return .none
         
       case .sendMessageButtonPressed:
         guard !state.text.isEmpty else { return .none }
         let text = state.text
-        var displayingDate = state.chat.messages.isEmpty
-        if let lastMessageDate = state.chat.messages.last?.date {
+        var displayingDate = state.messages.isEmpty
+        if let lastMessageDate = state.messages.last?.message.date {
           displayingDate = !Calendar.current.isDate(now, inSameDayAs: lastMessageDate)
         }
         let message = ChatMessage(id: uuid(), text: text, role: .user, date: now, displayingDate: displayingDate)
-        _ = state.$chat.withLock {
-          $0.messages.append(message)
-        }
+        state.messages.append(MessageFeature.State(message: message))
         state.isTyping = true
         state.text = ""
-        let messages = Array(state.chat.messages.suffix(11))
+        let messages = Array(state.messages.map(\.message))
         
-        return .run { [chatID = state.chat.id, sendMessage] send in
+        return .run { [sendMessage] send in
           await send(.scrollToBottom)
           await send(.aiResponse(Result {
-            func deleteMessage(_ message: ChatMessage) {
-              @Shared(.chats) var chats
-              _ = $chats[id: chatID].withLock {
-                $0?.messages.remove(message)
-              }
-            }
             do {
               return try await sendMessage(messages)
             } catch let error as NSError where error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled {
-              deleteMessage(message)
+              await send(.deleteMessage(id: message.id))
               throw error
             } catch let error as CancellationError {
-              deleteMessage(message)
+              await send(.deleteMessage(id: message.id))
               throw error
             } catch { throw error }
           }))
         }
+        
+      case let .deleteMessage(id):
+        state.messages.remove(id: id)
+        return .none
         
       case let .aiResponse(result):
         state.isTyping = false
         
         switch result {
         case let .success(message):
-          _ = state.$chat.withLock {
-            $0.messages.append(message)
-          }
+          state.messages.append(MessageFeature.State(message: message))
           return .run { send in
             await send(.scrollToBottom)
           }
@@ -145,7 +148,7 @@ public struct ChatFeature {
         }
         
       case .scrollToLastMessage:
-        state.scrollPosition = state.chat.messages.last?.idString
+        state.scrollPosition = state.messages.last?.message.idString
         return .none
         
       case .scrollToTypingIndicator:
@@ -177,10 +180,9 @@ public struct ChatFeature {
         return .none
         
       case .alert(.presented(.confirm)):
-        if let lastMessage = state.chat.messages.last, lastMessage.role == .user {
-          _ = state.$chat.withLock {
-            $0.messages.remove(lastMessage)
-          }
+        if let lastMessage = state.messages.last?.message,
+           lastMessage.role == .user {
+          return .send(.deleteMessage(id: lastMessage.id))
         }
         return .none
         
@@ -189,8 +191,16 @@ public struct ChatFeature {
       }
     }
     .ifLet(\.$alert, action: \.alert)
-    .onChange(of: \.chat) { oldValue, state in
-        .send(.delegate(.chatUpdated(id: state.chat.id)))
+    .forEach(\.messages, action: \.messages) {
+      MessageFeature()
+    }
+    .onChange(of: \.messages) { oldValue, state in
+      @Shared(.chats) var chats
+      let messages = state.messages.map(\.message)
+      $chats[id: state.id].withLock {
+        $0?.messages = IdentifiedArray(uniqueElements: messages)
+      }
+      return .send(.delegate(.chatUpdated(id: state.id)))
     }
   }
 }

@@ -28,11 +28,10 @@ private actor SpeechSynthesizer {
     print("🙂 \(Self.self)/deinit")
   }
   
-  func speak(text: String, language: String) async throws -> Bool {
+  func speak(text: String, language: String) async throws {
     stop()
-    let (stream, continuation) = AsyncStream.makeStream(of: Bool.self)
+    let (stream, continuation) = AsyncStream.makeStream(of: Void.self)
     delegate = Delegate {
-      continuation.yield(false)
       continuation.finish()
     }
     continuation.onTermination = { [weak self] _ in
@@ -47,11 +46,8 @@ private actor SpeechSynthesizer {
     synthesizer = AVSpeechSynthesizer()
     synthesizer?.delegate = delegate
     synthesizer?.speak(utterance)
-    continuation.yield(true)
 
-    for await isSpeaking in stream {
-      return isSpeaking
-    }
+    for await _ in stream { }
     throw CancellationError()
   }
   

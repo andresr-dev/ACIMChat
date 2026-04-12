@@ -21,9 +21,9 @@ public struct ChatView: View {
     VStack {
       ScrollViewReader { proxy in
         List {
-          ForEach(store.chat.messages) { message in
-            MessageView(message: message)
-              .id(message.idString)
+          ForEach(store.scope(state: \.messages, action: \.messages)) { store in
+            MessageView(store: store)
+              .id(store.id.uuidString)
               .listRowSeparator(.hidden)
               .listRowInsets(rowInsets)
           }
@@ -38,7 +38,7 @@ public struct ChatView: View {
         }
         .listStyle(.plain)
         .listRowSpacing(12)
-        .animation(.default, value: store.chat.messages)
+        .animation(.default, value: store.messages)
         .scrollDismissesKeyboard(.interactively)
         .defaultScrollAnchor(.bottom)
         .onScrollGeometryChange(for: Bool.self, of: { geo in
@@ -49,7 +49,7 @@ public struct ChatView: View {
           store.send(.isScrollAtBottomChanged(isScrollAtBottom))
         })
         .task(id: store.scrollToLastMessageTaskID) {
-          proxy.scrollTo(store.chat.messages.last?.idString, anchor: .bottom)
+          proxy.scrollTo(store.messages.last?.message.idString, anchor: .bottom)
         }
         .onChange(of: store.scrollPosition) { oldValue, newValue in
           withAnimation {
@@ -96,11 +96,12 @@ public struct ChatView: View {
     ChatView(
       store: Store(
         initialState: ChatFeature.State(
-          chat: Shared(value: ChatModel()),
+          chat: ChatModel(),
           text: "Hello"
         )
       ) {
         ChatFeature()
+          ._printChanges()
       }
     )
   }
@@ -111,11 +112,12 @@ public struct ChatView: View {
     ChatView(
       store: Store(
         initialState: ChatFeature.State(
-          chat: Shared(value: ChatModel()),
+          chat: .mock,
           text: "Hello"
         )
       ) {
         ChatFeature()
+          ._printChanges()
       } withDependencies: {
         $0.aiClient = .mock(.failure)
       }

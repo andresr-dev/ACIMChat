@@ -22,8 +22,8 @@ extension DependencyValues {
 
 extension AIClient: TestDependencyKey {
   public static let previewValue = AIClient { _ in
-    try await Task.sleep(for: .seconds(1))
-    return .mockAIMessage
+    try await Task.sleep(for: .seconds(2))
+    return ChatMessage(id: UUID(), text: "Hello there!", role: .ai, date: .now)
   }
   
   public static let testValue = mock(.success)
