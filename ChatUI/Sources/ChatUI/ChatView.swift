@@ -23,7 +23,7 @@ public struct ChatView: View {
         List {
           ForEach(store.scope(state: \.messages, action: \.messages)) { store in
             MessageView(store: store)
-              .id(store.id.uuidString)
+              .id(store.message.idString)
               .listRowSeparator(.hidden)
               .listRowInsets(rowInsets)
           }
@@ -44,7 +44,7 @@ public struct ChatView: View {
         .onScrollGeometryChange(for: Bool.self, of: { geo in
           let bottomOffsetY = geo.contentOffset.y + geo.visibleRect.height
           let contentHeight = geo.contentSize.height
-          return bottomOffsetY > contentHeight - 30
+          return bottomOffsetY > contentHeight - 20
         }, action: { wasScrollAtBottom, isScrollAtBottom in
           store.send(.isScrollAtBottomChanged(isScrollAtBottom))
         })

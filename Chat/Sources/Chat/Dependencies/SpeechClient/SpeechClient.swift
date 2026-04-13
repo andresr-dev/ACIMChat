@@ -15,7 +15,10 @@ struct SpeechClient {
 }
 
 extension SpeechClient: TestDependencyKey {
-  static let previewValue = SpeechClient()
+  static let previewValue = SpeechClient { text, language in
+    try await Task.sleep(for: .seconds(2))
+  } stop: { }
+
   static let testValue = SpeechClient()
 }
 

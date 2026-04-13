@@ -5,6 +5,7 @@ import SwiftUI
 
 struct MessageView: View {
   let store: StoreOf<MessageFeature>
+  let imageSize: CGFloat = 42
   
   var body: some View {
     VStack {
@@ -20,7 +21,7 @@ struct MessageView: View {
             .resizable()
             .scaledToFit()
             .frame(width: 52, height: 52)
-            .frame(width: 42, height: 42)
+            .frame(width: imageSize, height: imageSize)
             .clipShape(Circle())
         }
         
@@ -37,12 +38,27 @@ struct MessageView: View {
           }
           .frame(maxWidth: .infinity, alignment: alignment)
       }
+      
+      if store.message.role == .ai {
+        Button {
+          store.send(.speakButtonPressed)
+        } label: {
+          Group {
+            store.isSpeaking ? Image(systemName: "stop.fill") : Image(systemName: "speaker.wave.2")
+          }
+          .padding(.vertical, 3)
+          .padding(.leading, 16)
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.leading, imageSize)
+      }
     }
   }
 }
 
 #Preview {
-  MessageView(store: Store(initialState: MessageFeature.State(message: ChatModel.mock.messages[0])) {
+  MessageView(store: Store(initialState: MessageFeature.State(message: ChatModel.mock.messages[1])) {
     MessageFeature()
   })
 }

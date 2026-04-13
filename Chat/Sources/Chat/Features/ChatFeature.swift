@@ -79,6 +79,16 @@ public struct ChatFeature {
     
     Reduce { state, action in
       switch action {
+      case let .messages(.element(id: id, action: .delegate(delegateAction))):
+        switch delegateAction {
+        case .didStartSpeaking:
+          let messagesSpeaking = state.messages.filter(\.isSpeaking)
+          for messageID in messagesSpeaking.ids where messageID != id {
+            state.messages[id: messageID]?.isSpeaking = false
+          }
+        }
+        return .none
+        
       case .messages:
         return .none
         
@@ -136,7 +146,6 @@ public struct ChatFeature {
         return .send(.scrollToBottom)
         
       case .scrollToBottom:
-        state.showingScrollToBottomButton = false
         state.scrollPosition = nil
         
         return .run { [isTyping = state.isTyping] send in
@@ -194,7 +203,7 @@ public struct ChatFeature {
     .forEach(\.messages, action: \.messages) {
       MessageFeature()
     }
-    .onChange(of: \.messages) { oldValue, state in
+    .onChange(of: \.messages.count) { oldValue, state in
       @Shared(.chats) var chats
       let messages = state.messages.map(\.message)
       $chats[id: state.id].withLock {

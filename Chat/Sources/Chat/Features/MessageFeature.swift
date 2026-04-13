@@ -25,6 +25,12 @@ public struct MessageFeature {
   public enum Action: Equatable {
     case speakButtonPressed
     case didStopSpeaking
+    case delegate(Delegate)
+    
+    @CasePathable
+    public enum Delegate {
+      case didStartSpeaking
+    }
   }
   
   @Dependency(\.speechClient) var speech
@@ -35,15 +41,24 @@ public struct MessageFeature {
     Reduce { state, action in
       switch action {
       case .speakButtonPressed:
+        if state.isSpeaking {
+          return .run { [speech] send in
+            await speech.stop()
+          }
+        }
         state.isSpeaking = true
         
         return .run { [speech, text = state.message.text] send in
+          await send(.delegate(.didStartSpeaking))
           try? await speech.speak(text: text, language: "es")
           await send(.didStopSpeaking)
         }
         
       case .didStopSpeaking:
         state.isSpeaking = false
+        return .none
+        
+      case .delegate:
         return .none
       }
     }

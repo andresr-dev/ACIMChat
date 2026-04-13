@@ -37,6 +37,11 @@ private actor SpeechSynthesizer {
     continuation.onTermination = { [weak self] _ in
       Task { await self?.stop() }
     }
+    #if(iOS)
+    let session = AVAudioSession.sharedInstance()
+    try session.setCategory(.playback, options: [.duckOthers])
+    try session.setActive(true)
+    #endif
     let utterance = AVSpeechUtterance(string: text)
     utterance.voice = AVSpeechSynthesisVoice(language: language)
     utterance.rate = 0.5
