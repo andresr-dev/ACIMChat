@@ -21,7 +21,6 @@ public struct RootFeature {
   public struct State: Equatable {
     public var path: StackState<Path.State>
     public var chatList: ChatListFeature.State
-    @SharedReader(.chats) var chats
     
     public init(path: StackState<Path.State> = StackState(), chatList: ChatListFeature.State = ChatListFeature.State()) {
       self.path = path

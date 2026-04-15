@@ -1,5 +1,5 @@
 //
-//  ChatListTests.swift
+//  ChatListFeatureTests.swift
 //  Chat
 //
 //  Created by Andres Raigoza on 27/03/26.
@@ -11,7 +11,7 @@ import Foundation
 import Testing
 
 @MainActor
-struct ChatListTests {
+struct ChatListFeatureTests {
   
   @Test func appendsNewChatOnEmptyState() async throws {
     let store = getStore()
@@ -60,16 +60,16 @@ struct ChatListTests {
 }
 
 // MARK: - Helpers
-extension ChatListTests {
+extension ChatListFeatureTests {
   func getStore(
     fileID: StaticString = #fileID,
     file filePath: StaticString = #filePath,
     line: UInt = #line,
     column: UInt = #column
-  ) -> TestStoreOf<ChatList> {
+  ) -> TestStoreOf<ChatListFeature> {
     TestStore(
-      initialState: ChatList.State(),
-      reducer: { ChatList() },
+      initialState: ChatListFeature.State(),
+      reducer: { ChatListFeature() },
       withDependencies: {
         $0.uuid = .incrementing
         $0.continuousClock = .immediate
