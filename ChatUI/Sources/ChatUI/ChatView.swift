@@ -95,10 +95,7 @@ public struct ChatView: View {
   NavigationStack {
     ChatView(
       store: Store(
-        initialState: ChatFeature.State(
-          chat: ChatModel(),
-          text: "Hello"
-        )
+        initialState: ChatFeature.State(text: "Hello")
       ) {
         ChatFeature()
           ._printChanges()
@@ -111,10 +108,7 @@ public struct ChatView: View {
   NavigationStack {
     ChatView(
       store: Store(
-        initialState: ChatFeature.State(
-          chat: .mock,
-          text: "Hello"
-        )
+        initialState: ChatFeature.State(text: "Hello")
       ) {
         ChatFeature()
           ._printChanges()

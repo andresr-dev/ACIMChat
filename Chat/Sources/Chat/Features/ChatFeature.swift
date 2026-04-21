@@ -22,7 +22,7 @@ public struct ChatFeature {
       !text.isEmpty
     }
     
-    public init(id: UUID, messages: [MessageFeature.State] = [], text: String = "") {
+    public init(id: UUID = UUID(), messages: [MessageFeature.State] = [], text: String = "") {
       self.id = id
       self.messages = IdentifiedArray(uniqueElements: messages)
       self.text = text
