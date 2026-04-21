@@ -19,7 +19,10 @@ extension SpeechClient: TestDependencyKey {
     try await Task.sleep(for: .seconds(2))
   } stop: { }
 
-  static let testValue = SpeechClient()
+  static let testValue = SpeechClient(
+    speak: { _, _ in },
+    stop: { }
+  )
 }
 
 extension DependencyValues {

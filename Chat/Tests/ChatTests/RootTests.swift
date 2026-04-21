@@ -19,9 +19,8 @@ struct RootFeatureTests {
     let store = getStore()
         
     await store.send(.chatList(.navigateTo(chatID: chat.id))) {
-      $0.path[id: 0] = .chat(ChatFeature.State(chat: chat))
+      $0.path[id: 0] = .chat(ChatFeature.State(id: chat.id))
     }
-    
     await store.send(.path(.popFrom(id: 0))) {
       $0.path = StackState([])
     }
@@ -33,7 +32,7 @@ struct RootFeatureTests {
     let store = getStore()
         
     await store.send(.chatList(.navigateTo(chatID: chat.id))) {
-      $0.path[id: 0] = .chat(ChatFeature.State(chat: chat))
+      $0.path[id: 0] = .chat(ChatFeature.State(id: chat.id))
     }
     
     await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello")))))) {
@@ -47,6 +46,7 @@ struct RootFeatureTests {
       $0.path[id: 0, case: \.chat]?.isTyping = true
       $0.path[id: 0, case: \.chat]?.text = ""
       $0.path[id: 0, case: \.chat]?.messages = [MessageFeature.State(message: .mockUserMessage)]
+      $0.chatList.$chats.withLock { $0 = [chat] }
     }
     
     chat.messages.append(.mockAIMessage)
@@ -78,7 +78,15 @@ struct RootFeatureTests {
       $0.path = StackState([])
     }
     await store.send(.chatList(.navigateTo(chatID: chat.id))) {
-      $0.path[id: 1] = .chat(ChatFeature.State(chat: chat))
+      $0.path[id: 1] = .chat(
+        ChatFeature.State(
+          id: chat.id,
+          messages: [
+            MessageFeature.State(message: .mockUserMessage),
+            MessageFeature.State(message: .mockAIMessage)
+          ]
+        )
+      )
     }
   }
   
@@ -89,7 +97,7 @@ struct RootFeatureTests {
     store.exhaustivity = .off
     
     await store.send(.chatList(.navigateTo(chatID: chat.id))) {
-      $0.path[id: 0] = .chat(ChatFeature.State(chat: chat))
+      $0.path[id: 0] = .chat(ChatFeature.State(id: chat.id))
     }
     await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello")))))) {
       $0.path[id: 0, case: \.chat]?.text = "Hello"
@@ -117,7 +125,7 @@ struct RootFeatureTests {
     store.exhaustivity = .off
     
     await store.send(.chatList(.navigateTo(chatID: chat.id))) {
-      $0.path[id: 0] = .chat(ChatFeature.State(chat: chat))
+      $0.path[id: 0] = .chat(ChatFeature.State(id: chat.id))
     }
     await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello")))))) {
       $0.path[id: 0, case: \.chat]?.text = "Hello"

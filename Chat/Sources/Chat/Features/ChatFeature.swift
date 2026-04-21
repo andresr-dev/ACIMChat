@@ -22,11 +22,8 @@ public struct ChatFeature {
       !text.isEmpty
     }
     
-    public init(chat: ChatModel, text: String = "") {
-      self.id = chat.id
-      let messages = chat.messages.map {
-        MessageFeature.State(message: $0)
-      }
+    public init(id: UUID, messages: [MessageFeature.State] = [], text: String = "") {
+      self.id = id
       self.messages = IdentifiedArray(uniqueElements: messages)
       self.text = text
     }

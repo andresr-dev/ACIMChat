@@ -53,7 +53,10 @@ public struct RootFeature {
         guard let chat = state.chatList.chats[id: chatID] else {
           return .none
         }
-        state.path = StackState([.chat(ChatFeature.State(chat: chat))])
+        let messages = chat.messages.map(MessageFeature.State.init)
+        state.path = StackState(
+          [.chat(ChatFeature.State(id: chat.id, messages: messages))]
+        )
         return .none
         
       case .path, .chatList:

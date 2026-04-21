@@ -113,8 +113,12 @@ struct ChatFeatureTests {
     }
   }
   
-  @Test func fieldIsNotFocusedWhenViewAppearsWithChatNotEmpty() async throws {
-    let store = getStore(chat: ChatModel.mock)
+  @Test func fieldIsNotFocusedWhenViewAppearsWithNonEmptyChat() async throws {
+    let messages = [
+      MessageFeature.State(message: .mockUserMessage),
+      MessageFeature.State(message: .mockAIMessage),
+    ]
+    let store = getStore(messages: messages)
     
     await store.send(\.onAppear)
   }
@@ -172,8 +176,11 @@ struct ChatFeatureTests {
   }
   
   @Test func showsScrollToBottomButton() async throws {
-    let chat = ChatModel(messages: [.mockUserMessage, .mockAIMessage])
-    let store = getStore(chat: chat)
+    let messages = [
+      MessageFeature.State(message: .mockUserMessage),
+      MessageFeature.State(message: .mockAIMessage),
+    ]
+    let store = getStore(messages: messages)
     
     await store.send(.isScrollAtBottomChanged(true)) {
       $0.isScrollAtBottom = true
@@ -186,12 +193,24 @@ struct ChatFeatureTests {
       $0.showingScrollToBottomButton = true
     }
   }
+  
+  @Test func stopsSpeakingMessageOnDidStartSpeaking() async throws {
+    var message1 = MessageFeature.State(message: .mockUserMessage)
+    message1.isSpeaking = true
+    let message2 = MessageFeature.State(message: .mockAIMessage)
+    let messages = [message1, message2]
+    let store = getStore(messages: messages)
+    
+    await store.send(.messages(.element(id: message2.id, action: .delegate(.didStartSpeaking)))) {
+      $0.messages[0].isSpeaking = false
+    }
+  }
 }
 
 // MARK: - Helpers
 extension ChatFeatureTests {
   private func getStore(
-    chat: ChatModel = ChatModel(),
+    messages: [MessageFeature.State] = [],
     text: String = "",
     aiClient: AIClient = AIClient.mock(.success),
     fileID: StaticString = #fileID,
@@ -200,7 +219,7 @@ extension ChatFeatureTests {
     column: UInt = #column
   ) -> TestStore<ChatFeature.State, ChatFeature.Action> {
     TestStore(
-      initialState: ChatFeature.State(chat: chat, text: text),
+      initialState: ChatFeature.State(id: UUID(), messages: messages, text: text),
       reducer: { ChatFeature() },
       withDependencies: {
         $0.uuid = .incrementing
