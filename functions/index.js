@@ -102,58 +102,68 @@ exports.askACIM = onRequest(
 
       const openai   = new OpenAI({ apiKey: OPENAI_API_KEY_SECRET.value() });
       const pinecone = new Pinecone({ apiKey: PINECONE_API_KEY_SECRET.value() });
-      const index    = pinecone.index(PINECONE_INDEX);
 
-      // ── Step 2: Embed the user's question ──────────────────
-      const embeddingResponse = await openai.embeddings.create({
-        model: EMBEDDING_MODEL,
-        input: question,
-      });
-      const questionVector = embeddingResponse.data[0].embedding;
+      // ── Step 2: Detect small talk — skip Pinecone entirely ──
+      const SMALL_TALK_PATTERN = /^(hi|hello|hey|hola|buenos|gracias|thank|thanks|bye|adiós|adios|good morning|good night|buenas)\b/i;
+      const isSmallTalk = SMALL_TALK_PATTERN.test(question.trim());
 
-      // ── Step 3: Query Pinecone for relevant passages ────────
-      const queryResponse = await index.query({
-        vector: questionVector,
-        topK: topK,
-        filter: { language: language },
-        includeMetadata: true,
-      });
+      let userContent;
+      let passagesUsed = 0;
 
-      // Extract the passage texts from results
-      const passages = queryResponse.matches
-        .map((match, i) => `[Passage ${i + 1}]\n${match.metadata.text}`)
-        .join("\n\n");
-
-      if (!passages) {
-        return res.status(200).json({
-          answer: language === "en"
-            ? "I could not find a relevant passage in A Course in Miracles to answer your question."
-            : "No pude encontrar un pasaje relevante en Un Curso de Milagros para responder tu pregunta.",
+      if (isSmallTalk) {
+        // No retrieval needed — just pass the question directly
+        userContent = question;
+      } else {
+        // ── Step 3: Embed + query Pinecone for real questions ──
+        const embeddingResponse = await openai.embeddings.create({
+          model: EMBEDDING_MODEL,
+          input: question,
         });
+        const questionVector = embeddingResponse.data[0].embedding;
+
+        const queryResponse = await pinecone.index(PINECONE_INDEX).query({
+          vector: questionVector,
+          topK: topK,
+          filter: { language: language },
+          includeMetadata: true,
+        });
+
+        const passages = queryResponse.matches
+          .map((match, i) => `[Passage ${i + 1}]\n${match.metadata.text}`)
+          .join("\n\n");
+
+        passagesUsed = queryResponse.matches.length;
+        userContent  = passages
+          ? `Relevant wisdom for context:\n\n${passages}\n\nPerson: ${question}`
+          : question;
       }
 
-      // ── Step 4: Ask GPT to answer from passages ─────────────
-      const chatResponse = await openai.chat.completions.create({
+      // ── Step 4: Stream response from GPT ───────────────────
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+
+      const stream = await openai.chat.completions.create({
         model: chatModel,
+        stream: true,
         messages: [
           { role: "system", content: systemPrompt },
           ...history,
-          {
-            role: "user",
-            content: `Relevant wisdom for context:\n\n${passages}\n\nPerson: ${question}`,
-          },
+          { role: "user", content: userContent },
         ],
         temperature: temperature,
         max_tokens: maxTokens,
       });
 
-      const answer = chatResponse.choices[0].message.content;
+      // Stream each token to the client as it arrives
+      for await (const chunk of stream) {
+        const token = chunk.choices[0]?.delta?.content || "";
+        if (token) res.write(`data: ${JSON.stringify({ token, passages_used: passagesUsed })}\n\n`);
+      }
 
-      // ── Step 5: Return the answer ───────────────────────────
-      return res.status(200).json({
-        answer,
-        passages_used: queryResponse.matches.length,
-      });
+      // Signal end of stream
+      res.write(`data: ${JSON.stringify({ done: true, passages_used: passagesUsed })}\n\n`);
+      return res.end();
 
     } catch (err) {
       console.error("ACIM function error:", err);
