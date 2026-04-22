@@ -19,7 +19,7 @@ public struct ChatFeature {
     @Presents public var alert: AlertState<Action.Alert>?
     
     public var isShowingSendButton: Bool {
-      !text.isEmpty
+      text.count > 1
     }
     
     public init(id: UUID = UUID(), messages: [MessageFeature.State] = [], text: String = "") {
@@ -94,7 +94,7 @@ public struct ChatFeature {
         return .none
         
       case .sendMessageButtonPressed:
-        guard !state.text.isEmpty else { return .none }
+        guard state.text.count > 1 else { return .none }
         let text = state.text
         var displayingDate = state.messages.isEmpty
         if let lastMessageDate = state.messages.last?.message.date {
