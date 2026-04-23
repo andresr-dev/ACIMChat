@@ -12,7 +12,7 @@ import Foundation
 public struct MessageFeature {
   @ObservableState
   public struct State: Equatable, Identifiable {
-    public let message: ChatMessage
+    public var message: ChatMessage
     public var isSpeaking = false
     
     public var id: UUID { message.id }

@@ -42,7 +42,7 @@ public extension ChatModel {
 
 public struct ChatMessage: Equatable, Identifiable, Codable, Sendable {
   public let id: UUID
-  public let text: String
+  public var text: String
   public let role: Role
   public let date: Date
   public let displayingDate: Bool
@@ -56,7 +56,7 @@ public struct ChatMessage: Equatable, Identifiable, Codable, Sendable {
     case ai = "assistant"
   }
   
-  public init(id: UUID = UUID(), text: String, role: Role, date: Date = Date(), displayingDate: Bool = false) {
+  public init(id: UUID = UUID(), text: String = "", role: Role, date: Date = Date(), displayingDate: Bool = false) {
     self.id = id
     self.text = text
     self.role = role

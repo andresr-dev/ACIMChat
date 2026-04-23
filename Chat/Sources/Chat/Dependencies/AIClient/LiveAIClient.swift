@@ -10,41 +10,58 @@ import Foundation
 
 extension AIClient: DependencyKey {
   public static let liveValue = AIClient(
-    sendMessage: { messages in
-      let url = URL(string: "https://us-central1-acim-chat.cloudfunctions.net/askACIM")
-      guard let url else {
-        throw Error.invalidURL
-      }
-      var request = URLRequest(url: url)
-      request.httpMethod = "POST"
-      request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-      guard let question = messages.last?.text else {
-        throw Error.invalidQuestion
-      }
-      let history = messages.map(RequestChatMessage.init)
-      
-      let body = Request(
-        question: question,
-        language: "es",
-        history: history
-      )
-      request.httpBody = try JSONEncoder().encode(body)
-      
-      let (data, response) = try await URLSession.shared.data(for: request)
-      
-      guard let httpResponse = response as? HTTPURLResponse else {
-        throw Error.invalidResponse
-      }
-      guard (200...299).contains(httpResponse.statusCode) else {
-        throw Error.serverError(httpResponse.statusCode)
-      }
-      let decoder = JSONDecoder()
-      decoder.keyDecodingStrategy = .convertFromSnakeCase
-      do {
-        let response = try decoder.decode(Response.self, from: data)
-        return ChatMessage(text: response.answer, role: .ai)
-      } catch {
-        throw Error.decodingError(error)
+    sendMessage: { history in
+      AsyncThrowingStream { continuation in
+        Task {
+          do {
+            let url = URL(string: "https://us-central1-acim-chat.cloudfunctions.net/askACIM")
+            guard let url else {
+              continuation.finish(throwing: Error.invalidURL)
+              return
+            }
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            
+            guard let question = history.last?.text else {
+              continuation.finish(throwing: Error.invalidQuestion)
+              return
+            }
+            let body = Request(
+              question: question,
+              language: "es",
+              history: history.map(RequestChatMessage.init)
+            )
+            request.httpBody = try JSONEncoder().encode(body)
+            let (stream, response) = try await URLSession.shared.bytes(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+              continuation.finish(throwing: Error.invalidResponse)
+              return
+            }
+            guard (200...299).contains(httpResponse.statusCode) else {
+              continuation.finish(throwing: Error.serverError(httpResponse.statusCode))
+              return
+            }
+            for try await line in stream.lines {
+              guard line.hasPrefix("data: ") else { continue }
+              let jsonString = String(line.dropFirst(6))
+
+              guard let data = jsonString.data(using: .utf8),
+                    let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+              else { continue }
+
+              if let token = json["token"] as? String {
+                continuation.yield(token)
+              }
+              if json["done"] as? Bool == true {
+                continuation.finish()
+              }
+            }
+          } catch {
+            continuation.finish(throwing: error)
+          }
+        }
       }
     }
   )

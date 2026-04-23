@@ -85,8 +85,20 @@ public struct ChatView: View {
           }
         }
     }
-    .navigationTitle("UCDM")
-    .navigationBarTitleDisplayMode(.inline)
+    .toolbar {
+      ToolbarItem(placement: .principal) {
+        HStack(spacing: 12) {
+          Image(.holySpirit)
+            .resizable()
+            .scaledToFit()
+            .frame(width: 50, height: 50)
+            .frame(width: 40, height: 40)
+            .clipShape(Circle())
+          
+          Text("UCDM")
+        }
+      }
+    }
     .alert($store.scope(state: \.alert, action: \.alert))
   }
 }

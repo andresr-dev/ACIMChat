@@ -10,7 +10,7 @@ import Foundation
 
 @DependencyClient
 public struct AIClient: Sendable  {
-  var sendMessage: @Sendable ([ChatMessage]) async throws -> ChatMessage
+  var sendMessage: @Sendable (_ history: [ChatMessage]) -> AsyncThrowingStream<String, Swift.Error> = { _ in .finished() }
 }
 
 extension DependencyValues {
@@ -22,8 +22,15 @@ extension DependencyValues {
 
 extension AIClient: TestDependencyKey {
   public static let previewValue = AIClient { _ in
-    try await Task.sleep(for: .seconds(2))
-    return ChatMessage(id: UUID(), text: "Hello there!", role: .ai, date: .now)
+    AsyncThrowingStream { continuation in
+      Task { @MainActor in
+        try await Task.sleep(for: .seconds(2))
+        continuation.yield(
+//          ChatMessage(id: UUID(), text: "Hello there!", role: .ai, date: .now)
+          "Hello"
+        )
+      }
+    }
   }
   
   public static let testValue = mock(.success)
@@ -33,14 +40,37 @@ extension AIClient: TestDependencyKey {
   public static func mock(_ state: MockState) -> AIClient {
     switch state {
     case .success:
-      return AIClient { _ in .mockAIMessage
+      return AIClient { _ in
+        AsyncThrowingStream { continuation in
+          Task { @MainActor in
+            continuation.yield("Hello")
+          }
+        }
       }
     case .failure:
-      return AIClient { _ in throw Error.invalidResponse }
+      return AIClient { _ in
+        AsyncThrowingStream { continuation in
+          Task { @MainActor in
+            continuation.finish(throwing: Error.invalidResponse)
+          }
+        }
+      }
     case .cancellation:
-      return AIClient { _ in throw CancellationError() }
+      return AIClient { _ in
+        AsyncThrowingStream { continuation in
+          Task { @MainActor in
+            continuation.finish(throwing: CancellationError())
+          }
+        }
+      }
     case .urlCancellation:
-      return AIClient { _ in throw NSError(domain: NSURLErrorDomain, code: NSURLErrorCancelled) }
+      return AIClient { _ in
+        AsyncThrowingStream { continuation in
+          Task { @MainActor in
+            continuation.finish(throwing: NSError(domain: NSURLErrorDomain, code: NSURLErrorCancelled))
+          }
+        }
+      }
     }
   }
 }

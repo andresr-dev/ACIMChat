@@ -35,6 +35,7 @@ public struct ChatFeature {
     case onAppear
     case sendMessageButtonPressed
     case aiResponse(Result<ChatMessage, Error>)
+    case aiResponseFinished
     case alert(PresentationAction<Alert>)
     case delegate(Delegate)
     case scrollToBottomButtonPressed
@@ -106,19 +107,23 @@ public struct ChatFeature {
         state.text = ""
         let messages = Array(state.messages.map(\.message))
         
-        return .run { [sendMessage] send in
+        return .run { [sendMessage, uuid] send in
           await send(.scrollToBottom)
-          await send(.aiResponse(Result {
-            do {
-              return try await sendMessage(messages)
-            } catch let error as NSError where error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled {
-              await send(.deleteMessage(id: message.id))
-              throw error
-            } catch let error as CancellationError {
-              await send(.deleteMessage(id: message.id))
-              throw error
-            } catch { throw error }
-          }))
+          do {
+            var message = ChatMessage(id: uuid(), role: .ai)
+            
+            for try await token in sendMessage(messages) {
+              message.text += token
+              await send(.aiResponse(.success(message)))
+            }
+          } catch let error as NSError where error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled {
+            await send(.deleteMessage(id: message.id))
+          } catch _ as CancellationError {
+            await send(.deleteMessage(id: message.id))
+          } catch {
+            await send(.aiResponse(.failure(error)))
+          }
+          await send(.aiResponseFinished)
         }
         
       case let .deleteMessage(id):
@@ -130,7 +135,11 @@ public struct ChatFeature {
         
         switch result {
         case let .success(message):
-          state.messages.append(MessageFeature.State(message: message))
+          if state.messages.ids.contains(message.id) {
+            state.messages[id: message.id]?.message = message
+          } else {
+            state.messages.append(MessageFeature.State(message: message))
+          }
           return .run { send in
             await send(.scrollToBottom)
           }
@@ -138,6 +147,16 @@ public struct ChatFeature {
           state.alert = .error
           return .none
         }
+        
+      case .aiResponseFinished:
+        @Shared(.chats) var chats
+        let messages = state.messages.map(\.message)
+        if let lastMessage = messages.last, lastMessage.role == .ai {
+          _ = $chats[id: state.id].withLock {
+            $0?.messages.append(lastMessage)
+          }
+        }
+        return .none
         
       case .scrollToBottomButtonPressed:
         return .send(.scrollToBottom)
@@ -203,8 +222,10 @@ public struct ChatFeature {
     .onChange(of: \.messages.count) { oldValue, state in
       @Shared(.chats) var chats
       let messages = state.messages.map(\.message)
-      $chats[id: state.id].withLock {
-        $0?.messages = IdentifiedArray(uniqueElements: messages)
+      if let lastMessage = messages.last, lastMessage.role == .user {
+        _ = $chats[id: state.id].withLock {
+          $0?.messages.append(lastMessage)
+        }
       }
       return .send(.delegate(.chatUpdated(id: state.id)))
     }
