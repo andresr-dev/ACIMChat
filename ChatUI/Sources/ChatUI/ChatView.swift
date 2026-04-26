@@ -12,6 +12,21 @@ import SwiftUI
 public struct ChatView: View {
   @Bindable var store: StoreOf<ChatFeature>
   private let rowInsets = EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+  @State private var contentHeight: CGFloat = 10
+  @State private var lastUserMessageHeight: CGFloat = 0
+  @State private var inputHeight: CGFloat = 0
+  
+  var aiMessageBackgroundHeight: CGFloat {
+    max(contentHeight - lastUserMessageHeight - inputHeight - 32, 10)
+  }
+  
+  func isLastUserMessage(_ message: ChatMessage) -> Bool {
+    message.role == .user && store.messages.last?.message == message
+  }
+  
+  func isLastAIMessage(_ message: ChatMessage) -> Bool {
+    message.role == .ai && store.messages.last?.message == message
+  }
   
   public init(store: StoreOf<ChatFeature>) {
     self.store = store
@@ -21,26 +36,59 @@ public struct ChatView: View {
     VStack {
       ScrollViewReader { proxy in
         List {
-          ForEach(store.scope(state: \.messages, action: \.messages)) { store in
-            MessageView(store: store)
-              .id(store.message.idString)
-              .listRowSeparator(.hidden)
-              .listRowInsets(rowInsets)
+          ForEach(store.scope(state: \.messages, action: \.messages)) { messageStore in
+
+            ZStack(alignment: .topLeading) {
+              if isLastAIMessage(messageStore.message) {
+                Color.clear
+                  .frame(height: aiMessageBackgroundHeight)
+                  .onAppear {
+                    print("aiMessageBackgroundHeight", aiMessageBackgroundHeight)
+                  }
+              }
+              
+              MessageView(
+                store: messageStore,
+                isAIResponseInProgress: store.aiResponseInProgressID == messageStore.id
+              )
+              .onAppear {
+                guard isLastUserMessage(messageStore.message) else { return }
+                withAnimation {
+                  proxy.scrollTo(messageStore.id, anchor: .top)
+                }
+              }
+              .onGeometryChange(for: CGFloat.self, of: { proxy in
+                proxy.size.height
+              }, action: { newValue in
+                if isLastUserMessage(messageStore.message) {
+                  lastUserMessageHeight = newValue
+                  print("lastUserMessageHeight", lastUserMessageHeight)
+                }
+              })
+            }
+            .id(messageStore.message.idString)
+            .listRowSeparator(.hidden)
+            .listRowInsets(rowInsets)
           }
           
           if store.isTyping {
-            TypingIndicator()
-              .id(store.typingIndicatorID)
-              .frame(maxWidth: .infinity, alignment: .leading)
-              .listRowSeparator(.hidden)
-              .listRowInsets(rowInsets)
+            ZStack(alignment: .topLeading) {
+              Color.clear
+                .frame(height: aiMessageBackgroundHeight)
+                .task {
+                  print("aiMessageBackgroundHeight Typing", aiMessageBackgroundHeight)
+                }
+              
+              TypingIndicator()
+            }
+            .id(store.typingIndicatorID)
+            .listRowSeparator(.hidden)
+            .listRowInsets(rowInsets)
           }
         }
         .listStyle(.plain)
         .listRowSpacing(12)
-        .animation(.default, value: store.messages)
         .scrollDismissesKeyboard(.interactively)
-        .defaultScrollAnchor(.bottom)
         .onScrollGeometryChange(for: Bool.self, of: { geo in
           let bottomOffsetY = geo.contentOffset.y + geo.visibleRect.height
           let contentHeight = geo.contentSize.height
@@ -48,10 +96,17 @@ public struct ChatView: View {
         }, action: { wasScrollAtBottom, isScrollAtBottom in
           store.send(.isScrollAtBottomChanged(isScrollAtBottom))
         })
+        .onScrollGeometryChange(for: CGFloat.self, of: { geo in
+          geo.visibleRect.height
+        }, action: { _, newValue in
+          contentHeight = newValue
+          print("contentHeight", contentHeight)
+        })
         .task(id: store.scrollToLastMessageTaskID) {
           proxy.scrollTo(store.messages.last?.message.idString, anchor: .bottom)
         }
         .onChange(of: store.scrollPosition) { oldValue, newValue in
+          guard let newValue else { return }
           withAnimation {
             proxy.scrollTo(newValue, anchor: .bottom)
           }
@@ -65,6 +120,12 @@ public struct ChatView: View {
           Color(.systemBackground)
             .ignoresSafeArea()
         }
+        .onGeometryChange(for: CGFloat.self, of: { proxy in
+          proxy.size.height
+        }, action: { newValue in
+            inputHeight = newValue
+            print("inputHeight", inputHeight)
+        })
         .overlay(alignment: .topTrailing) {
           if store.showingScrollToBottomButton {
             Button {
@@ -91,8 +152,8 @@ public struct ChatView: View {
           Image(.holySpirit)
             .resizable()
             .scaledToFit()
-            .frame(width: 50, height: 50)
-            .frame(width: 40, height: 40)
+            .frame(width: 52, height: 52)
+            .frame(width: 42, height: 42)
             .clipShape(Circle())
           
           Text("UCDM")
@@ -110,7 +171,7 @@ public struct ChatView: View {
         initialState: ChatFeature.State(text: "Hello")
       ) {
         ChatFeature()
-          ._printChanges()
+//          ._printChanges()
       }
     )
   }
@@ -123,7 +184,6 @@ public struct ChatView: View {
         initialState: ChatFeature.State(text: "Hello")
       ) {
         ChatFeature()
-          ._printChanges()
       } withDependencies: {
         $0.aiClient = .mock(.failure)
       }

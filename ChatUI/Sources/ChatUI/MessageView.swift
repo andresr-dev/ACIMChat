@@ -5,6 +5,7 @@ import SwiftUI
 
 struct MessageView: View {
   let store: StoreOf<MessageFeature>
+  var isAIResponseInProgress: Bool
   
   var body: some View {
     VStack {
@@ -27,7 +28,7 @@ struct MessageView: View {
         }
         .frame(maxWidth: .infinity, alignment: alignment)
       
-      if store.message.role == .ai {
+      if store.message.role == .ai && !isAIResponseInProgress {
         Button {
           store.send(.speakButtonPressed)
         } label: {
@@ -47,5 +48,5 @@ struct MessageView: View {
 #Preview {
   MessageView(store: Store(initialState: MessageFeature.State(message: ChatModel.mock.messages[1])) {
     MessageFeature()
-  })
+  }, isAIResponseInProgress: false)
 }

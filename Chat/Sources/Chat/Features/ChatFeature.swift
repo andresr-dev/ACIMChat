@@ -16,6 +16,7 @@ public struct ChatFeature {
     public var isScrollAtBottom = false
     public var scrollToLastMessageTaskID: UUID?
     public var showingScrollToBottomButton = false
+    public var aiResponseInProgressID: UUID?
     @Presents public var alert: AlertState<Action.Alert>?
     
     public var isShowingSendButton: Bool {
@@ -105,10 +106,10 @@ public struct ChatFeature {
         state.messages.append(MessageFeature.State(message: message))
         state.isTyping = true
         state.text = ""
+        state.focusedField = false
         let messages = Array(state.messages.map(\.message))
         
         return .run { [sendMessage, uuid] send in
-          await send(.scrollToBottom)
           do {
             var message = ChatMessage(id: uuid(), role: .ai)
             
@@ -138,17 +139,18 @@ public struct ChatFeature {
           if state.messages.ids.contains(message.id) {
             state.messages[id: message.id]?.message = message
           } else {
+            state.aiResponseInProgressID = message.id
             state.messages.append(MessageFeature.State(message: message))
           }
-          return .run { send in
-            await send(.scrollToBottom)
-          }
+          return .none
         case .failure:
           state.alert = .error
           return .none
         }
         
       case .aiResponseFinished:
+        state.aiResponseInProgressID = nil
+        
         @Shared(.chats) var chats
         let messages = state.messages.map(\.message)
         if let lastMessage = messages.last, lastMessage.role == .ai {
