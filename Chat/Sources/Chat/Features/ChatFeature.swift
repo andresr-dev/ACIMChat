@@ -96,6 +96,7 @@ public struct ChatFeature {
         return .none
         
       case .sendMessageButtonPressed:
+        state.text = state.text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard state.text.count > 1 else { return .none }
         let text = state.text
         var displayingDate = state.messages.isEmpty
@@ -188,7 +189,7 @@ public struct ChatFeature {
         return .run { [clock] send in
           if !isScrollAtBottom {
             try await withTaskCancellation(id: CancelID.scrollToBottomButton, cancelInFlight: true) {
-              try await clock.sleep(for: .seconds(1))
+              try await clock.sleep(for: .seconds(0.5))
               await send(.updateShowingScrollToBottomButton(isShowing: true))
             }
           } else {

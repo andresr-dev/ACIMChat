@@ -14,10 +14,11 @@ public struct ChatView: View {
   private let rowInsets = EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
   @State private var contentHeight: CGFloat = 10
   @State private var lastUserMessageHeight: CGFloat = 0
+  @State private var lastAIMessageHeight: CGFloat = 0
   @State private var inputHeight: CGFloat = 0
   
   var aiMessageBackgroundHeight: CGFloat {
-    max(contentHeight - lastUserMessageHeight - inputHeight - 32, 10)
+    max(contentHeight - lastUserMessageHeight - inputHeight - 92, 10)
   }
   
   func isLastUserMessage(_ message: ChatMessage) -> Bool {
@@ -41,10 +42,7 @@ public struct ChatView: View {
             ZStack(alignment: .topLeading) {
               if isLastAIMessage(messageStore.message) {
                 Color.clear
-                  .frame(height: aiMessageBackgroundHeight)
-                  .onAppear {
-                    print("aiMessageBackgroundHeight", aiMessageBackgroundHeight)
-                  }
+                  .frame(height: store.focusedField ? lastAIMessageHeight :  aiMessageBackgroundHeight)
               }
               
               MessageView(
@@ -62,7 +60,8 @@ public struct ChatView: View {
               }, action: { newValue in
                 if isLastUserMessage(messageStore.message) {
                   lastUserMessageHeight = newValue
-                  print("lastUserMessageHeight", lastUserMessageHeight)
+                } else if isLastAIMessage(messageStore.message) {
+                  lastAIMessageHeight = newValue
                 }
               })
             }
@@ -75,9 +74,6 @@ public struct ChatView: View {
             ZStack(alignment: .topLeading) {
               Color.clear
                 .frame(height: aiMessageBackgroundHeight)
-                .task {
-                  print("aiMessageBackgroundHeight Typing", aiMessageBackgroundHeight)
-                }
               
               TypingIndicator()
             }
@@ -99,8 +95,9 @@ public struct ChatView: View {
         .onScrollGeometryChange(for: CGFloat.self, of: { geo in
           geo.visibleRect.height
         }, action: { _, newValue in
-          contentHeight = newValue
-          print("contentHeight", contentHeight)
+          if newValue > contentHeight {
+            contentHeight = newValue
+          }
         })
         .task(id: store.scrollToLastMessageTaskID) {
           proxy.scrollTo(store.messages.last?.message.idString, anchor: .bottom)
@@ -123,8 +120,7 @@ public struct ChatView: View {
         .onGeometryChange(for: CGFloat.self, of: { proxy in
           proxy.size.height
         }, action: { newValue in
-            inputHeight = newValue
-            print("inputHeight", inputHeight)
+          inputHeight = newValue
         })
         .overlay(alignment: .topTrailing) {
           if store.showingScrollToBottomButton {
