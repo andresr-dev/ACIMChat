@@ -24,7 +24,7 @@ extension AIClient: TestDependencyKey {
   public static let previewValue = AIClient { _ in
     AsyncThrowingStream { continuation in
       Task { @MainActor in
-        try await Task.sleep(for: .seconds(2))
+        try await Task.sleep(for: .seconds(4))
         var finalText = """
               Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor \
               incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud \

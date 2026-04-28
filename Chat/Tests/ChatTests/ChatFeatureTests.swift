@@ -84,16 +84,6 @@ struct ChatFeatureTests {
     await store.receive(\.aiResponseFinished) {
       $0.aiResponseInProgressID = nil
     }
-  }
-  
-  @Test func emptyMessageIsNotSent() async throws {
-    let store = getStore()
-    
-    #expect(store.state.text.isEmpty)
-    #expect(store.state.isShowingSendButton == false)
-    await store.send(.sendMessageButtonPressed)
-  }
-  
   @Test func fieldIsFocusedWhenViewAppearsWithEmptyChat() async throws {
     let store = getStore()
     

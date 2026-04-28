@@ -19,7 +19,7 @@ public struct ChatView: View {
   
   var aiMessageBackgroundHeight: CGFloat {
     let visibleContentHeight = max(contentHeight - lastUserMessageHeight - inputHeight - 92, 10)
-    if store.isAIResponseInProgress {
+    if store.isAIResponseInProgress || store.isTyping {
       return visibleContentHeight
     } else {
       return min(visibleContentHeight, lastAIMessageHeight)
@@ -45,21 +45,14 @@ public struct ChatView: View {
           ForEach(store.scope(state: \.messages, action: \.messages)) { messageStore in
 
             ZStack(alignment: .topLeading) {
-              if isLastAIMessage(messageStore.message) {
+              if isLastAIMessage(messageStore.message) && !store.focusedField {
                 Color.clear
-                  .frame(height: store.focusedField ? lastAIMessageHeight :  aiMessageBackgroundHeight)
+                  .frame(height: aiMessageBackgroundHeight)
               }
-              
               MessageView(
                 store: messageStore,
                 isAIResponseInProgress: store.aiResponseInProgressID == messageStore.id
               )
-              .onAppear {
-                guard isLastUserMessage(messageStore.message) else { return }
-                withAnimation {
-                  proxy.scrollTo(messageStore.id, anchor: .top)
-                }
-              }
               .onGeometryChange(for: CGFloat.self, of: { proxy in
                 proxy.size.height
               }, action: { newValue in
@@ -70,16 +63,17 @@ public struct ChatView: View {
                 }
               })
             }
-            .id(messageStore.message.idString)
+            .id(messageStore.message.id.uuidString)
             .listRowSeparator(.hidden)
             .listRowInsets(rowInsets)
           }
           
           if store.isTyping {
             ZStack(alignment: .topLeading) {
-              Color.clear
-                .frame(height: aiMessageBackgroundHeight)
-              
+              if !store.focusedField {
+                Color.clear
+                  .frame(height: aiMessageBackgroundHeight)
+              }
               TypingIndicator()
             }
             .id(store.typingIndicatorID)
@@ -105,12 +99,19 @@ public struct ChatView: View {
           }
         })
         .task(id: store.scrollToLastMessageTaskID) {
-          proxy.scrollTo(store.messages.last?.message.idString, anchor: .bottom)
+          proxy.scrollTo(store.messages.last?.message.id.uuidString, anchor: .bottom)
         }
-        .onChange(of: store.scrollPosition) { oldValue, newValue in
-          guard let newValue else { return }
+        .onChange(of: store.scrollPosition) { _, position in
+          guard let position else { return }
           withAnimation {
-            proxy.scrollTo(newValue, anchor: .bottom)
+            switch position {
+            case let .ai(id):
+              proxy.scrollTo(id, anchor: .bottom)
+            case let .user(id):
+              proxy.scrollTo(id, anchor: .top)
+            case let .typing(id):
+              proxy.scrollTo(id, anchor: .bottom)
+            }
           }
         }
       }

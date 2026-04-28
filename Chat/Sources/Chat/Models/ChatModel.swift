@@ -47,10 +47,6 @@ public struct ChatMessage: Equatable, Identifiable, Codable, Sendable {
   public let date: Date
   public let displayingDate: Bool
   
-  public var idString: String {
-    id.uuidString
-  }
-  
   public enum Role: String, Codable, Sendable {
     case user
     case ai = "assistant"
