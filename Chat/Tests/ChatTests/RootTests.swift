@@ -56,23 +56,19 @@ struct RootFeatureTests {
       ]
       $0.chatList.$chats.withLock { $0 = [chat] }
     }
-    await store.receive(\.path[id: 0].chat.scrollToBottom)
     
     await store.receive(\.path[id: 0].chat.aiResponse.success) {
       $0.path[id: 0, case: \.chat]?.isTyping = false
       $0.chatList.$chats.withLock { $0 = [chat] }
+      $0.path[id: 0, case: \.chat]?.aiResponseInProgressID = chat.messages.last?.id
       $0.path[id: 0, case: \.chat]?.messages = [
         MessageFeature.State(message: .mockUserMessage),
         MessageFeature.State(message: .mockAIMessage)
       ]
     }
     await store.receive(\.path[id: 0].chat.delegate.chatUpdated)
-    await store.receive(\.path[id: 0].chat.scrollToBottom)
-    await store.receive(\.path[id: 0].chat.scrollToTypingIndicator) {
-      $0.path[id: 0, case: \.chat]?.scrollPosition = "typing"
-    }
-    await store.receive(\.path[id: 0].chat.scrollToLastMessage) {
-      $0.path[id: 0, case: \.chat]?.scrollPosition = ChatMessage.mockAIMessage.idString
+    await store.receive(\.path[id: 0].chat.aiResponseFinished) {
+      $0.path[id: 0, case: \.chat]?.aiResponseInProgressID = nil
     }
     await store.send(.path(.popFrom(id: 0))) {
       $0.path = StackState([])

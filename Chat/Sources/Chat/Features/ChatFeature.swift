@@ -16,10 +16,11 @@ public struct ChatFeature {
     public var isScrollAtBottom = false
     public var scrollToLastMessageTaskID: UUID?
     public var showingScrollToBottomButton = false
+    public var aiResponseInProgressID: UUID?
     @Presents public var alert: AlertState<Action.Alert>?
     
     public var isShowingSendButton: Bool {
-      !text.isEmpty
+      text.count > 1
     }
     
     public init(id: UUID = UUID(), messages: [MessageFeature.State] = [], text: String = "") {
@@ -34,7 +35,8 @@ public struct ChatFeature {
     case binding(BindingAction<State>)
     case onAppear
     case sendMessageButtonPressed
-    case aiResponse(Result<ChatMessage, Error>)
+    case aiResponse(Result<String, Error>)
+    case aiResponseFinished
     case alert(PresentationAction<Alert>)
     case delegate(Delegate)
     case scrollToBottomButtonPressed
@@ -94,7 +96,8 @@ public struct ChatFeature {
         return .none
         
       case .sendMessageButtonPressed:
-        guard !state.text.isEmpty else { return .none }
+        state.text = state.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard state.text.count > 1 else { return .none }
         let text = state.text
         var displayingDate = state.messages.isEmpty
         if let lastMessageDate = state.messages.last?.message.date {
@@ -104,40 +107,67 @@ public struct ChatFeature {
         state.messages.append(MessageFeature.State(message: message))
         state.isTyping = true
         state.text = ""
+        state.focusedField = false
         let messages = Array(state.messages.map(\.message))
         
         return .run { [sendMessage] send in
-          await send(.scrollToBottom)
-          await send(.aiResponse(Result {
-            do {
-              return try await sendMessage(messages)
-            } catch let error as NSError where error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled {
-              await send(.deleteMessage(id: message.id))
-              throw error
-            } catch let error as CancellationError {
-              await send(.deleteMessage(id: message.id))
-              throw error
-            } catch { throw error }
-          }))
+          do {
+            var response = ""
+            for try await token in sendMessage(messages) {
+              response += token
+              await send(.aiResponse(.success(response)))
+            }
+          } catch let error as NSError where error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled {
+            await send(.deleteMessage(id: message.id))
+          } catch _ as CancellationError {
+            await send(.deleteMessage(id: message.id))
+          } catch {
+            await send(.aiResponse(.failure(error)))
+          }
+          await send(.aiResponseFinished)
         }
         
-      case let .deleteMessage(id):
-        state.messages.remove(id: id)
+      case let .deleteMessage(messageID):
+        state.messages.remove(id: messageID)
+        
+        @Shared(.chats) var chats
+        _ = $chats[id: state.id].withLock {
+          $0?.messages.remove(id: messageID)
+        }
         return .none
         
       case let .aiResponse(result):
         state.isTyping = false
-        
         switch result {
-        case let .success(message):
-          state.messages.append(MessageFeature.State(message: message))
-          return .run { send in
-            await send(.scrollToBottom)
+        case let .success(response):
+          if state.aiResponseInProgressID == nil {
+            state.aiResponseInProgressID = uuid()
           }
+          guard let responseID = state.aiResponseInProgressID else { return .none }
+          
+          if state.messages.ids.contains(responseID) {
+            state.messages[id: responseID]?.message.text = response
+          } else {
+            let aiMessage = ChatMessage(id: responseID, text: response, role: .ai, date: now)
+            state.messages.append(MessageFeature.State(message: aiMessage))
+          }
+          return .none
         case .failure:
           state.alert = .error
           return .none
         }
+        
+      case .aiResponseFinished:
+        state.aiResponseInProgressID = nil
+        
+        @Shared(.chats) var chats
+        let messages = state.messages.map(\.message)
+        if let lastMessage = messages.last, lastMessage.role == .ai {
+          _ = $chats[id: state.id].withLock {
+            $0?.messages.append(lastMessage)
+          }
+        }
+        return .none
         
       case .scrollToBottomButtonPressed:
         return .send(.scrollToBottom)
@@ -167,7 +197,7 @@ public struct ChatFeature {
         return .run { [clock] send in
           if !isScrollAtBottom {
             try await withTaskCancellation(id: CancelID.scrollToBottomButton, cancelInFlight: true) {
-              try await clock.sleep(for: .seconds(1))
+              try await clock.sleep(for: .seconds(0.5))
               await send(.updateShowingScrollToBottomButton(isShowing: true))
             }
           } else {
@@ -203,8 +233,10 @@ public struct ChatFeature {
     .onChange(of: \.messages.count) { oldValue, state in
       @Shared(.chats) var chats
       let messages = state.messages.map(\.message)
-      $chats[id: state.id].withLock {
-        $0?.messages = IdentifiedArray(uniqueElements: messages)
+      if let lastMessage = messages.last, lastMessage.role == .user {
+        _ = $chats[id: state.id].withLock {
+          $0?.messages.append(lastMessage)
+        }
       }
       return .send(.delegate(.chatUpdated(id: state.id)))
     }
