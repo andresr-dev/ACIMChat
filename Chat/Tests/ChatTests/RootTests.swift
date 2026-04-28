@@ -56,7 +56,9 @@ struct RootFeatureTests {
       ]
       $0.chatList.$chats.withLock { $0 = [chat] }
     }
-    
+    await store.receive(\.path[id: 0].chat.scrollToLastUserMessage) {
+      $0.path[id: 0, case: \.chat]?.scrollPosition = .user(ChatMessage.mockUserMessage.id.uuidString)
+    }
     await store.receive(\.path[id: 0].chat.aiResponse.success) {
       $0.path[id: 0, case: \.chat]?.isTyping = false
       $0.chatList.$chats.withLock { $0 = [chat] }

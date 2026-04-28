@@ -23,7 +23,7 @@ struct ChatFeatureTests {
     
     let userMessage = ChatMessage.mockUserMessage
     let aiMessage = ChatMessage.mockAIMessage
-
+    
     await store.send(.sendMessageButtonPressed) {
       $0.messages = [
         MessageFeature.State(message: userMessage)
@@ -32,6 +32,9 @@ struct ChatFeatureTests {
       $0.text = ""
     }
     await store.receive(\.delegate.chatUpdated)
+    await store.receive(\.scrollToLastUserMessage) {
+      $0.scrollPosition = .user(userMessage.id.uuidString)
+    }
     await store.receive(\.aiResponse.success) {
       $0.isTyping = false
       $0.aiResponseInProgressID = aiMessage.id
@@ -70,6 +73,9 @@ struct ChatFeatureTests {
     await store.receive(\.delegate.chatUpdated)
     
     let secondAIResponse = ChatMessage(id: UUID(3), text: "Hello there!", role: .ai, date: nextDayDate)
+    await store.receive(\.scrollToLastUserMessage) {
+      $0.scrollPosition = .user(secondUserMessage.id.uuidString)
+    }
     await store.receive(\.aiResponse.success) {
       $0.isTyping = false
       $0.aiResponseInProgressID = secondAIResponse.id
@@ -84,6 +90,8 @@ struct ChatFeatureTests {
     await store.receive(\.aiResponseFinished) {
       $0.aiResponseInProgressID = nil
     }
+  }
+  
   @Test func fieldIsFocusedWhenViewAppearsWithEmptyChat() async throws {
     let store = getStore()
     
@@ -125,6 +133,9 @@ struct ChatFeatureTests {
     }
     
     await store.receive(\.delegate.chatUpdated)
+    await store.receive(\.scrollToLastUserMessage) {
+      $0.scrollPosition = .user(userMessage.id.uuidString)
+    }
     await store.receive(\.aiResponse.failure) {
       $0.isTyping = false
       $0.alert = .error
