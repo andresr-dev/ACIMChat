@@ -13,12 +13,17 @@ public struct ChatView: View {
   @Bindable var store: StoreOf<ChatFeature>
   private let rowInsets = EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
   @State private var contentHeight: CGFloat = 10
-  @State private var lastUserMessageHeight: CGFloat = 0
-  @State private var lastAIMessageHeight: CGFloat = 0
-  @State private var inputHeight: CGFloat = 0
+  @State private var lastUserMessageHeight: CGFloat = 10
+  @State private var lastAIMessageHeight: CGFloat = 10
+  @State private var inputHeight: CGFloat = 10
   
   var aiMessageBackgroundHeight: CGFloat {
-    max(contentHeight - lastUserMessageHeight - inputHeight - 92, 10)
+    let visibleContentHeight = max(contentHeight - lastUserMessageHeight - inputHeight - 92, 10)
+    if store.isAIResponseInProgress {
+      return visibleContentHeight
+    } else {
+      return min(visibleContentHeight, lastAIMessageHeight)
+    }
   }
   
   func isLastUserMessage(_ message: ChatMessage) -> Bool {

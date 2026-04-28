@@ -23,6 +23,10 @@ public struct ChatFeature {
       text.count > 1
     }
     
+    public var isAIResponseInProgress: Bool {
+      aiResponseInProgressID != nil
+    }
+    
     public init(id: UUID = UUID(), messages: [MessageFeature.State] = [], text: String = "") {
       self.id = id
       self.messages = IdentifiedArray(uniqueElements: messages)
