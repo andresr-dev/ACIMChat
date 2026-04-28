@@ -56,6 +56,7 @@ extension AIClient: TestDependencyKey {
         AsyncThrowingStream { continuation in
           Task { @MainActor in
             continuation.yield("Hello")
+            continuation.finish()
           }
         }
       }

@@ -35,7 +35,7 @@ public struct ChatFeature {
     case binding(BindingAction<State>)
     case onAppear
     case sendMessageButtonPressed
-    case aiResponse(Result<ChatMessage, Error>)
+    case aiResponse(Result<String, Error>)
     case aiResponseFinished
     case alert(PresentationAction<Alert>)
     case delegate(Delegate)
@@ -110,13 +110,12 @@ public struct ChatFeature {
         state.focusedField = false
         let messages = Array(state.messages.map(\.message))
         
-        return .run { [sendMessage, uuid] send in
+        return .run { [sendMessage] send in
           do {
-            var message = ChatMessage(id: uuid(), role: .ai)
-            
+            var response = ""
             for try await token in sendMessage(messages) {
-              message.text += token
-              await send(.aiResponse(.success(message)))
+              response += token
+              await send(.aiResponse(.success(response)))
             }
           } catch let error as NSError where error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled {
             await send(.deleteMessage(id: message.id))
@@ -128,20 +127,29 @@ public struct ChatFeature {
           await send(.aiResponseFinished)
         }
         
-      case let .deleteMessage(id):
-        state.messages.remove(id: id)
+      case let .deleteMessage(messageID):
+        state.messages.remove(id: messageID)
+        
+        @Shared(.chats) var chats
+        _ = $chats[id: state.id].withLock {
+          $0?.messages.remove(id: messageID)
+        }
         return .none
         
       case let .aiResponse(result):
         state.isTyping = false
-        
         switch result {
-        case let .success(message):
-          if state.messages.ids.contains(message.id) {
-            state.messages[id: message.id]?.message = message
+        case let .success(response):
+          if state.aiResponseInProgressID == nil {
+            state.aiResponseInProgressID = uuid()
+          }
+          guard let responseID = state.aiResponseInProgressID else { return .none }
+          
+          if state.messages.ids.contains(responseID) {
+            state.messages[id: responseID]?.message.text = response
           } else {
-            state.aiResponseInProgressID = message.id
-            state.messages.append(MessageFeature.State(message: message))
+            let aiMessage = ChatMessage(id: responseID, text: response, role: .ai, date: now)
+            state.messages.append(MessageFeature.State(message: aiMessage))
           }
           return .none
         case .failure:

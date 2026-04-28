@@ -68,5 +68,5 @@ public struct ChatMessage: Equatable, Identifiable, Codable, Sendable {
 public extension ChatMessage {
   static let mockUserMessage = ChatMessage(id: UUID(0), text: "Hello", role: .user, date: Date(timeIntervalSince1970: 0), displayingDate: true)
   
-  static let mockAIMessage = ChatMessage(id: UUID(2), text: "Hello there!", role: .ai, date: Date(timeIntervalSince1970: 0))
+  static let mockAIMessage = ChatMessage(id: UUID(1), text: "Hello", role: .ai, date: Date(timeIntervalSince1970: 0))
 }

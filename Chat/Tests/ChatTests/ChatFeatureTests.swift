@@ -32,23 +32,17 @@ struct ChatFeatureTests {
       $0.text = ""
     }
     await store.receive(\.delegate.chatUpdated)
-    await store.receive(\.scrollToBottom)
     await store.receive(\.aiResponse.success) {
       $0.isTyping = false
+      $0.aiResponseInProgressID = aiMessage.id
       $0.messages = [
         MessageFeature.State(message: userMessage),
         MessageFeature.State(message: aiMessage)
       ]
     }
     await store.receive(\.delegate.chatUpdated)
-    await store.receive(\.scrollToTypingIndicator) {
-      $0.scrollPosition = "typing"
-    }
-    await store.receive(\.scrollToBottom) {
-      $0.scrollPosition = nil
-    }
-    await store.receive(\.scrollToLastMessage) {
-      $0.scrollPosition = aiMessage.idString
+    await store.receive(\.aiResponseFinished) {
+      $0.aiResponseInProgressID = nil
     }
     await store.send(.binding(.set(\.text, "Hello Again!"))) {
       $0.text = "Hello Again!"
@@ -56,13 +50,14 @@ struct ChatFeatureTests {
     let nextDayDate = userMessage.date.addingTimeInterval(60 * 60 * 24)
     store.dependencies.date.now = nextDayDate
     
-    let secondAIResponse = ChatMessage(id: UUID(3), text: "Hello there!", role: .ai, date: nextDayDate)
     store.dependencies.aiClient.sendMessage = { _ in
-      secondAIResponse
+      AsyncThrowingStream { continuation in
+        continuation.yield("Hello there!")
+        continuation.finish()
+      }
     }
     
-    let secondUserMessage = ChatMessage(id: UUID(1), text: "Hello Again!", role: .user, date: nextDayDate, displayingDate: true)
-    
+    let secondUserMessage = ChatMessage(id: UUID(2), text: "Hello Again!", role: .user, date: nextDayDate, displayingDate: true)
     await store.send(.sendMessageButtonPressed) {
       $0.messages = [
         MessageFeature.State(message: userMessage),
@@ -73,11 +68,11 @@ struct ChatFeatureTests {
       $0.text = ""
     }
     await store.receive(\.delegate.chatUpdated)
-    await store.receive(\.scrollToBottom) {
-      $0.scrollPosition = nil
-    }
+    
+    let secondAIResponse = ChatMessage(id: UUID(3), text: "Hello there!", role: .ai, date: nextDayDate)
     await store.receive(\.aiResponse.success) {
       $0.isTyping = false
+      $0.aiResponseInProgressID = secondAIResponse.id
       $0.messages = [
         MessageFeature.State(message: userMessage),
         MessageFeature.State(message: aiMessage),
@@ -86,14 +81,8 @@ struct ChatFeatureTests {
       ]
     }
     await store.receive(\.delegate.chatUpdated)
-    await store.receive(\.scrollToTypingIndicator) {
-      $0.scrollPosition = "typing"
-    }
-    await store.receive(\.scrollToBottom) {
-      $0.scrollPosition = nil
-    }
-    await store.receive(\.scrollToLastMessage) {
-      $0.scrollPosition = secondAIResponse.idString
+    await store.receive(\.aiResponseFinished) {
+      $0.aiResponseInProgressID = nil
     }
   }
   
@@ -146,14 +135,12 @@ struct ChatFeatureTests {
     }
     
     await store.receive(\.delegate.chatUpdated)
-    await store.receive(\.scrollToBottom)
-    await store.receive(\.aiResponse) {
+    await store.receive(\.aiResponse.failure) {
       $0.isTyping = false
       $0.alert = .error
     }
-    await store.receive(\.scrollToTypingIndicator) {
-      $0.scrollPosition = "typing"
-    }
+    await store.receive(\.aiResponseFinished)
+    
     await store.send(.alert(.presented(.confirm))) {
       $0.alert = nil
     }
