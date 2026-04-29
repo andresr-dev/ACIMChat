@@ -22,9 +22,22 @@
 		4197C5A72F631D720020CE35 /* ChatUI */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = ChatUI; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		413C87E12FA25C66004F6795 /* Exceptions for "ACIMChat" folder in "ACIMChat" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 4197C4672F5FB33C0020CE35 /* ACIMChat */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		4197C46A2F5FB33C0020CE35 /* ACIMChat */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				413C87E12FA25C66004F6795 /* Exceptions for "ACIMChat" folder in "ACIMChat" target */,
+			);
 			path = ACIMChat;
 			sourceTree = "<group>";
 		};
@@ -297,7 +310,9 @@
 				DEVELOPMENT_TEAM = 2NS42499VH;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ACIMChat/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "ACIM Chat";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -331,7 +346,9 @@
 				DEVELOPMENT_TEAM = 2NS42499VH;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ACIMChat/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "ACIM Chat";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

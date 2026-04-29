@@ -11,7 +11,7 @@ public struct ChatFeature {
     public var text: String
     public var focusedField = false
     public var isTyping = false
-    public var scrollPosition: String?
+    public var scrollPosition: ScrollPosition?
     public let typingIndicatorID = "typing"
     public var isScrollAtBottom = false
     public var scrollToLastMessageTaskID: UUID?
@@ -21,6 +21,16 @@ public struct ChatFeature {
     
     public var isShowingSendButton: Bool {
       text.count > 1
+    }
+    
+    public var isAIResponseInProgress: Bool {
+      aiResponseInProgressID != nil
+    }
+    
+    public enum ScrollPosition: Equatable {
+      case ai(String)
+      case user(String)
+      case typing(String)
     }
     
     public init(id: UUID = UUID(), messages: [MessageFeature.State] = [], text: String = "") {
@@ -42,7 +52,8 @@ public struct ChatFeature {
     case scrollToBottomButtonPressed
     case scrollToBottom
     case scrollToTypingIndicator
-    case scrollToLastMessage
+    case scrollToLastAIMessage
+    case scrollToLastUserMessage
     case isScrollAtBottomChanged(Bool)
     case textFieldHeightIncreased
     case updateShowingScrollToBottomButton(isShowing: Bool)
@@ -112,6 +123,7 @@ public struct ChatFeature {
         
         return .run { [sendMessage] send in
           do {
+            await send(.scrollToLastUserMessage)
             var response = ""
             for try await token in sendMessage(messages) {
               response += token
@@ -179,16 +191,26 @@ public struct ChatFeature {
           if isTyping {
             await send(.scrollToTypingIndicator)
           } else {
-            await send(.scrollToLastMessage)
+            await send(.scrollToLastAIMessage)
           }
         }
         
-      case .scrollToLastMessage:
-        state.scrollPosition = state.messages.last?.message.idString
+      case .scrollToLastAIMessage:
+        guard let message = state.messages.last?.message, message.role == .ai else {
+          return .none
+        }
+        state.scrollPosition = .ai(message.id.uuidString)
+        return .none
+        
+      case .scrollToLastUserMessage:
+        guard let message = state.messages.last?.message, message.role == .user else {
+          return .none
+        }
+        state.scrollPosition = .user(message.id.uuidString)
         return .none
         
       case .scrollToTypingIndicator:
-        state.scrollPosition = state.typingIndicatorID
+        state.scrollPosition = .typing(state.typingIndicatorID)
         return .none
         
       case let .isScrollAtBottomChanged(isScrollAtBottom):
