@@ -67,9 +67,50 @@ comparte el extracto relevante de los pasajes que se te han dado, presentado con
 como si le estuvieras ofreciendo un regalo. Después de compartirlo, haz una pregunta gentil.`,
 };
 
-// ─────────────────────────────────────────────
-// MAIN CLOUD FUNCTION
-// ─────────────────────────────────────────────
+exports.generateTitle = onRequest(
+  { cors: true, secrets: [OPENAI_API_KEY_SECRET] },
+  async (req, res) => {
+
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Method not allowed. Use POST." });
+    }
+
+    const { firstQuestion, firstAnswer, language = "en" } = req.body;
+
+    if (!firstQuestion || !firstAnswer) {
+      return res.status(400).json({ error: "Missing firstQuestion or firstAnswer." });
+    }
+
+    try {
+      const openai = new OpenAI({ apiKey: OPENAI_API_KEY_SECRET.value() });
+
+      const prompt = language === "en"
+        ? `Based on this conversation exchange, generate a short meaningful title (4 words max, no quotes, no punctuation):
+           User: ${firstQuestion}
+           Assistant: ${firstAnswer}
+           Title:`
+        : `Basándote en este intercambio de conversación, genera un título corto y significativo (máximo 4 palabras, sin comillas, sin puntuación):
+           Usuario: ${firstQuestion}
+           Asistente: ${firstAnswer}
+           Título:`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+        max_tokens: 20,  // titles are short, no need for more
+      });
+
+      const title = response.choices[0].message.content.trim();
+      return res.status(200).json({ title });
+
+    } catch (err) {
+      console.error("generateTitle error:", err);
+      return res.status(500).json({ error: "Internal server error", details: err.message });
+    }
+  }
+);
+
 exports.askACIM = onRequest(
   { cors: true, secrets: [OPENAI_API_KEY_SECRET, PINECONE_API_KEY_SECRET] },
   async (req, res) => {
