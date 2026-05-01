@@ -20,6 +20,7 @@ struct ChatListView: View {
         } label: {
           HStack {
             Text(chat.title ?? "New Conversation")
+              .lineLimit(1)
             Spacer()
             Image(systemName: "chevron.right")
               .font(.callout)
