@@ -170,7 +170,7 @@ public struct ChatView: View {
   NavigationStack {
     ChatView(
       store: Store(
-        initialState: ChatFeature.State(text: "Hello")
+        initialState: ChatFeature.State(chat: Shared(value: .mock), text: "Hello")
       ) {
         ChatFeature()
 //          ._printChanges()
@@ -183,7 +183,7 @@ public struct ChatView: View {
   NavigationStack {
     ChatView(
       store: Store(
-        initialState: ChatFeature.State(text: "Hello")
+        initialState: ChatFeature.State(chat: Shared(value: .mock), text: "Hello")
       ) {
         ChatFeature()
       } withDependencies: {

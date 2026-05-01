@@ -22,8 +22,12 @@ public struct ChatListFeature {
     case onAppear
     case addChatButtonPressed
     case deleteButtonPressed(IndexSet)
-    case navigateTo(chatID: ChatModel.ID)
     case addChat(ChatModel)
+    case delegate(Delegate)
+    
+    public enum Delegate {
+      case navigateTo(chat: Shared<ChatModel>)
+    }
   }
   
   @Dependency(\.uuid) var uuid
@@ -43,16 +47,21 @@ public struct ChatListFeature {
           state.$chats.withLock {
             _ = $0.append(chat)
           }
+          if let sharedChat = Shared(state.$chats[id: chat.id]) {
+            return .send(.delegate(.navigateTo(chat: sharedChat)))
+          }
         }
-        guard let chatID = state.chats.ids.first else { return .none }
-        return .send(.navigateTo(chatID: chatID))
+        return .none
         
       case .addChatButtonPressed:
         return .run { [clock, uuid] send in
           let chat = ChatModel(id: uuid())
           await send(.addChat(chat), animation: .default)
           try await clock.sleep(for: .seconds(0.5))
-          await send(.navigateTo(chatID: chat.id))
+          @Shared(.chats) var chats
+          if let sharedChat = Shared($chats[id: chat.id]) {
+            await send(.delegate(.navigateTo(chat: sharedChat)))
+          }
         }
         
       case let .deleteButtonPressed(indexSet):
@@ -67,7 +76,10 @@ public struct ChatListFeature {
             let chat = ChatModel(id: uuid())
             await send(.addChat(chat), animation: .default)
             try await clock.sleep(for: .seconds(0.3))
-            await send(.navigateTo(chatID: chat.id))
+            @Shared(.chats) var chats
+            if let sharedChat = Shared($chats[id: chat.id]) {
+              await send(.delegate(.navigateTo(chat: sharedChat)))
+            }
           }
         }
         return .none
@@ -78,7 +90,7 @@ public struct ChatListFeature {
         }
         return .none
         
-      case .navigateTo:
+      case .delegate:
         return .none
       }
     }

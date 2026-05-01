@@ -49,14 +49,8 @@ public struct RootFeature {
           return .none
         }
         
-      case let .chatList(.navigateTo(chatID: chatID)):
-        guard let chat = state.chatList.chats[id: chatID] else {
-          return .none
-        }
-        let messages = chat.messages.map(MessageFeature.State.init)
-        state.path = StackState(
-          [.chat(ChatFeature.State(id: chat.id, messages: messages))]
-        )
+      case let .chatList(.delegate(.navigateTo(chat: chat))):
+        state.path = StackState([.chat(ChatFeature.State(chat: chat))])
         return .none
         
       case .path, .chatList:
