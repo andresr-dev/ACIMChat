@@ -10,17 +10,17 @@ import Foundation
 
 @DependencyClient
 struct SpeechClient {
-  var speak: @Sendable (_ text: String, _ language: String) async throws -> Void
+  var speak: @Sendable (_ text: String) async throws -> Void
   var stop: @Sendable () async -> Void
 }
 
 extension SpeechClient: TestDependencyKey {
-  static let previewValue = SpeechClient { text, language in
+  static let previewValue = SpeechClient { text in
     try await Task.sleep(for: .seconds(2))
   } stop: { }
 
   static let testValue = SpeechClient(
-    speak: { _, _ in },
+    speak: { _ in },
     stop: { }
   )
 }

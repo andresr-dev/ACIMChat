@@ -50,7 +50,7 @@ public struct MessageFeature {
         
         return .run { [speech, text = state.message.text] send in
           await send(.delegate(.didStartSpeaking))
-          try? await speech.speak(text: text, language: "es")
+          try? await speech.speak(text: text)
           await send(.didStopSpeaking)
         }
         
