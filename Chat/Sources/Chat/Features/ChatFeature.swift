@@ -68,7 +68,7 @@ public struct ChatFeature {
     
     @CasePathable
     public enum Delegate: Equatable {
-      case chatUpdated(id: ChatModel.ID)
+      case moveChatToTop(id: ChatModel.ID)
     }
   }
   
@@ -117,18 +117,19 @@ public struct ChatFeature {
           displayingDate = !Calendar.current.isDate(now, inSameDayAs: lastMessageDate)
         }
         let message = ChatMessage(id: uuid(), text: text, role: .user, date: now, displayingDate: displayingDate)
-        state.messages.append(MessageFeature.State(message: message))
         _ = state.$chat.withLock {
           $0.messages.append(message)
         }
+        state.messages.append(MessageFeature.State(message: message))
         state.isTyping = true
         state.text = ""
         state.focusedField = false
         let messages = Array(state.messages.map(\.message))
         
-        return .run { [aiClient] send in
+        return .run { [aiClient, chatID = state.chat.id] send in
           do {
             await send(.scrollToLastUserMessage)
+            await send(.delegate(.moveChatToTop(id: chatID)))
             var response = ""
             for try await token in aiClient.sendMessage(messages) {
               response += token
@@ -278,9 +279,6 @@ public struct ChatFeature {
     .ifLet(\.$alert, action: \.alert)
     .forEach(\.messages, action: \.messages) {
       MessageFeature()
-    }
-    .onChange(of: \.messages.count) { oldValue, state in
-        .send(.delegate(.chatUpdated(id: state.chat.id)))
     }
   }
 }

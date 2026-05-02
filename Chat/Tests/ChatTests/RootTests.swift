@@ -18,8 +18,8 @@ struct RootFeatureTests {
     @Shared(.chats) var chats = [chat]
     let store = getStore()
         
-    await store.send(.chatList(.navigateTo(chatID: chat.id))) {
-      $0.path[id: 0] = .chat(ChatFeature.State(id: chat.id))
+    await store.send(.chatList(.delegate(.navigateTo(chat: $chats[0])))) {
+      $0.path[id: 0] = .chat(ChatFeature.State(chat: $chats[0]))
     }
     await store.send(.path(.popFrom(id: 0))) {
       $0.path = StackState([])
@@ -31,8 +31,8 @@ struct RootFeatureTests {
     @Shared(.chats) var chats = [chat]
     let store = getStore()
         
-    await store.send(.chatList(.navigateTo(chatID: chat.id))) {
-      $0.path[id: 0] = .chat(ChatFeature.State(id: chat.id))
+    await store.send(.chatList(.delegate(.navigateTo(chat: $chats[0])))) {
+      $0.path[id: 0] = .chat(ChatFeature.State(chat: $chats[0]))
     }
     
     await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello")))))) {
@@ -50,7 +50,7 @@ struct RootFeatureTests {
     }
     
     chat.messages.append(.mockAIMessage)
-    await store.receive(\.path[id: 0].chat.delegate.chatUpdated) {
+    await store.receive(\.path[id: 0].chat.delegate.moveChatToTop) {
       $0.path[id: 0, case: \.chat]?.messages = [
         MessageFeature.State(message: .mockUserMessage)
       ]
@@ -68,22 +68,16 @@ struct RootFeatureTests {
         MessageFeature.State(message: .mockAIMessage)
       ]
     }
-    await store.receive(\.path[id: 0].chat.delegate.chatUpdated)
+    await store.receive(\.path[id: 0].chat.delegate.moveChatToTop)
     await store.receive(\.path[id: 0].chat.aiResponseFinished) {
       $0.path[id: 0, case: \.chat]?.aiResponseInProgressID = nil
     }
     await store.send(.path(.popFrom(id: 0))) {
       $0.path = StackState([])
     }
-    await store.send(.chatList(.navigateTo(chatID: chat.id))) {
+    await store.send(.chatList(.delegate(.navigateTo(chat: $chats[0])))) {
       $0.path[id: 1] = .chat(
-        ChatFeature.State(
-          id: chat.id,
-          messages: [
-            MessageFeature.State(message: .mockUserMessage),
-            MessageFeature.State(message: .mockAIMessage)
-          ]
-        )
+        ChatFeature.State(chat: $chats[0])
       )
     }
   }
@@ -94,8 +88,8 @@ struct RootFeatureTests {
     let store = getStore(aiClient: .mock(.cancellation))
     store.exhaustivity = .off
     
-    await store.send(.chatList(.navigateTo(chatID: chat.id))) {
-      $0.path[id: 0] = .chat(ChatFeature.State(id: chat.id))
+    await store.send(.chatList(.delegate(.navigateTo(chat: $chats[0])))) {
+      $0.path[id: 0] = .chat(ChatFeature.State(chat: $chats[0]))
     }
     await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello")))))) {
       $0.path[id: 0, case: \.chat]?.text = "Hello"
@@ -122,8 +116,8 @@ struct RootFeatureTests {
     let store = getStore(aiClient: .mock(.urlCancellation))
     store.exhaustivity = .off
     
-    await store.send(.chatList(.navigateTo(chatID: chat.id))) {
-      $0.path[id: 0] = .chat(ChatFeature.State(id: chat.id))
+    await store.send(.chatList(.delegate(.navigateTo(chat: $chats[0])))) {
+      $0.path[id: 0] = .chat(ChatFeature.State(chat: $chats[0]))
     }
     await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello")))))) {
       $0.path[id: 0, case: \.chat]?.text = "Hello"
@@ -151,12 +145,12 @@ struct RootFeatureTests {
     let store = getStore()
     store.exhaustivity = .off
     
-    await store.send(.chatList(.navigateTo(chatID: chat2.id)))
+    await store.send(.chatList(.delegate(.navigateTo(chat: $chats[1]))))
     await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello"))))))
     await store.send(.path(.element(id: 0, action: .chat(.sendMessageButtonPressed))))
     
     chat2.messages = [.mockUserMessage, .mockAIMessage]
-    await store.receive(\.path[id: 0].chat.delegate.chatUpdated) {
+    await store.receive(\.path[id: 0].chat.delegate.moveChatToTop) {
       $0.chatList.$chats.withLock { $0 = [chat2, chat1] }
     }
   }

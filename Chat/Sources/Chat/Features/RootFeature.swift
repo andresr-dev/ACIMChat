@@ -44,7 +44,7 @@ public struct RootFeature {
       switch action {
       case let .path(.element(id: _, action: .chat(.delegate(actionDelegate)))):
         switch actionDelegate {
-        case let .chatUpdated(id: chatID):
+        case let .moveChatToTop(id: chatID):
           moveChatToTop(state: &state, chatID: chatID)
           return .none
         }

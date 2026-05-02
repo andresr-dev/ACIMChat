@@ -25,6 +25,7 @@ public struct ChatListFeature {
     case addChat(ChatModel)
     case delegate(Delegate)
     
+    @CasePathable
     public enum Delegate {
       case navigateTo(chat: Shared<ChatModel>)
     }
