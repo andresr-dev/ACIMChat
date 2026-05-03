@@ -12,7 +12,7 @@ import Foundation
 public struct ChatListFeature {
   @ObservableState
   public struct State: Equatable {
-    @Shared(.chats) public var chats: IdentifiedArrayOf<ChatModel>
+    @Shared(.chats) public var chats
     var onAppearPerformed = false
     
     public init() { }

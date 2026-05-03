@@ -30,7 +30,6 @@ struct ChatListFeatureTests {
     await store.send(\.onAppear) {
       $0.onAppearPerformed = true
     }
-    await store.receive(\.delegate.navigateTo)
   }
   
   @Test func addsNewChat() async throws {

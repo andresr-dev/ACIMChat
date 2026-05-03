@@ -93,7 +93,7 @@ public struct ChatFeature {
       switch action {
       case let .messages(.element(id: id, action: .delegate(delegateAction))):
         switch delegateAction {
-        case .didStartSpeaking:
+        case .stopOtherSpeakers:
           let messagesSpeaking = state.messages.filter(\.isSpeaking)
           for messageID in messagesSpeaking.ids where messageID != id {
             state.messages[id: messageID]?.isSpeaking = false
