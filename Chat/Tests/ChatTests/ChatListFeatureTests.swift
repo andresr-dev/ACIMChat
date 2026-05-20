@@ -20,7 +20,7 @@ struct ChatListFeatureTests {
       $0.onAppearPerformed = true
       $0.$chats.withLock { $0 = [ChatModel(id: UUID(0))] }
     }
-    await store.receive(\.navigateTo)
+    await store.receive(\.delegate.navigateTo)
   }
   
   @Test func doesNotAppendNewChatOnNonEmptyState() async throws {
@@ -30,7 +30,6 @@ struct ChatListFeatureTests {
     await store.send(\.onAppear) {
       $0.onAppearPerformed = true
     }
-    await store.receive(\.navigateTo)
   }
   
   @Test func addsNewChat() async throws {
@@ -42,7 +41,7 @@ struct ChatListFeatureTests {
     await store.receive(\.addChat) {
       $0.$chats.withLock { $0 = [ChatModel(id: UUID(0)), chat] }
     }
-    await store.receive(\.navigateTo)
+    await store.receive(\.delegate.navigateTo)
   }
   
   @Test func chatDeletion() async throws {
@@ -55,7 +54,7 @@ struct ChatListFeatureTests {
     await store.receive(\.addChat) {
       $0.$chats.withLock { $0 = [ChatModel(id: UUID(0))] }
     }
-    await store.receive(\.navigateTo)
+    await store.receive(\.delegate.navigateTo)
   }
 }
 

@@ -29,7 +29,7 @@ public struct MessageFeature {
     
     @CasePathable
     public enum Delegate {
-      case didStartSpeaking
+      case stopOtherSpeakers
     }
   }
   
@@ -49,8 +49,8 @@ public struct MessageFeature {
         state.isSpeaking = true
         
         return .run { [speech, text = state.message.text] send in
-          await send(.delegate(.didStartSpeaking))
-          try? await speech.speak(text: text, language: "es")
+          await send(.delegate(.stopOtherSpeakers))
+          try? await speech.speak(text: text)
           await send(.didStopSpeaking)
         }
         

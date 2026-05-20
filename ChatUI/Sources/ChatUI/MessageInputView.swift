@@ -63,7 +63,7 @@ struct MessageInputView: View {
 #Preview {
   MessageInputView(
     store: Store(
-      initialState: ChatFeature.State(text: "dfdf")
+      initialState: ChatFeature.State(chat: Shared(value: .mock), text: "Hello")
     ) {
       ChatFeature()
     }

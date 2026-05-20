@@ -14,12 +14,12 @@ struct ChatListView: View {
   
   var body: some View {
     List {
-      ForEach(store.chats) { chat in
+      ForEach(Array(store.$chats)) { $chat in
         Button {
-          store.send(.navigateTo(chatID: chat.id))
+          store.send(.delegate(.navigateTo(chat: $chat)))
         } label: {
           HStack {
-            Text(chat.title)
+            Text(chat.title ?? "New Conversation")
               .lineLimit(1)
             Spacer()
             Image(systemName: "chevron.right")

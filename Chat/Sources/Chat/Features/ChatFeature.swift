@@ -6,7 +6,7 @@ import Foundation
 public struct ChatFeature {
   @ObservableState
   public struct State: Equatable {
-    public let id: UUID
+    @Shared var chat: ChatModel
     public var messages: IdentifiedArrayOf<MessageFeature.State>
     public var text: String
     public var focusedField = false
@@ -33,8 +33,9 @@ public struct ChatFeature {
       case typing(String)
     }
     
-    public init(id: UUID = UUID(), messages: [MessageFeature.State] = [], text: String = "") {
-      self.id = id
+    public init(chat: Shared<ChatModel>, text: String = "") {
+      self._chat = chat
+      let messages = chat.wrappedValue.messages.map(MessageFeature.State.init)
       self.messages = IdentifiedArray(uniqueElements: messages)
       self.text = text
     }
@@ -58,6 +59,7 @@ public struct ChatFeature {
     case textFieldHeightIncreased
     case updateShowingScrollToBottomButton(isShowing: Bool)
     case deleteMessage(id: UUID)
+    case titleGenerated(String)
     
     @CasePathable
     public enum Alert: Equatable, Sendable {
@@ -66,13 +68,13 @@ public struct ChatFeature {
     
     @CasePathable
     public enum Delegate: Equatable {
-      case chatUpdated(id: ChatModel.ID)
+      case moveChatToTop(id: ChatModel.ID)
     }
   }
   
   public init() { }
   
-  @Dependency(\.aiClient.sendMessage) var sendMessage
+  @Dependency(\.aiClient) var aiClient
   @Dependency(\.uuid) var uuid
   @Dependency(\.date.now) var now
   @Dependency(\.continuousClock) var clock
@@ -91,7 +93,7 @@ public struct ChatFeature {
       switch action {
       case let .messages(.element(id: id, action: .delegate(delegateAction))):
         switch delegateAction {
-        case .didStartSpeaking:
+        case .stopOtherSpeakers:
           let messagesSpeaking = state.messages.filter(\.isSpeaking)
           for messageID in messagesSpeaking.ids where messageID != id {
             state.messages[id: messageID]?.isSpeaking = false
@@ -115,17 +117,21 @@ public struct ChatFeature {
           displayingDate = !Calendar.current.isDate(now, inSameDayAs: lastMessageDate)
         }
         let message = ChatMessage(id: uuid(), text: text, role: .user, date: now, displayingDate: displayingDate)
+        _ = state.$chat.withLock {
+          $0.messages.append(message)
+        }
         state.messages.append(MessageFeature.State(message: message))
         state.isTyping = true
         state.text = ""
         state.focusedField = false
         let messages = Array(state.messages.map(\.message))
         
-        return .run { [sendMessage] send in
+        return .run { [aiClient, chatID = state.chat.id] send in
           do {
             await send(.scrollToLastUserMessage)
+            await send(.delegate(.moveChatToTop(id: chatID)))
             var response = ""
-            for try await token in sendMessage(messages) {
+            for try await token in aiClient.sendMessage(messages) {
               response += token
               await send(.aiResponse(.success(response)))
             }
@@ -142,9 +148,8 @@ public struct ChatFeature {
       case let .deleteMessage(messageID):
         state.messages.remove(id: messageID)
         
-        @Shared(.chats) var chats
-        _ = $chats[id: state.id].withLock {
-          $0?.messages.remove(id: messageID)
+        _ = state.$chat.withLock {
+          $0.messages.remove(id: messageID)
         }
         return .none
         
@@ -170,16 +175,33 @@ public struct ChatFeature {
         }
         
       case .aiResponseFinished:
+        let aiResponseID = state.aiResponseInProgressID
         state.aiResponseInProgressID = nil
         
-        @Shared(.chats) var chats
         let messages = state.messages.map(\.message)
-        if let lastMessage = messages.last, lastMessage.role == .ai {
-          _ = $chats[id: state.id].withLock {
-            $0?.messages.append(lastMessage)
+        let question = messages.last { $0.role == .user }
+        let answer = messages.last { $0.id == aiResponseID && $0.role == .ai }
+        if let answer {
+          _ = state.$chat.withLock {
+            $0.messages.append(answer)
           }
         }
-        return .none
+        return .run { [aiClient, chatTitle = state.chat.title] send in
+          guard let question = question?.text,
+                let answer = answer?.text,
+                chatTitle == nil else {
+            return
+          }
+          let isQuestionValid = question.split(separator: " ").count >= 3
+          let isAnswerValid = answer.split(separator: " ").count >= 20
+          
+          if isQuestionValid, isAnswerValid {
+            let title = try? await aiClient.generateTitle(question, answer)
+            if let title {
+              await send(.titleGenerated(title))
+            }
+          }
+        }
         
       case .scrollToBottomButtonPressed:
         return .send(.scrollToBottom)
@@ -244,6 +266,12 @@ public struct ChatFeature {
         }
         return .none
         
+      case let .titleGenerated(title):
+        state.$chat.withLock {
+          $0.title = title
+        }
+        return .none
+        
       case .binding, .alert, .delegate:
         return .none
       }
@@ -251,16 +279,6 @@ public struct ChatFeature {
     .ifLet(\.$alert, action: \.alert)
     .forEach(\.messages, action: \.messages) {
       MessageFeature()
-    }
-    .onChange(of: \.messages.count) { oldValue, state in
-      @Shared(.chats) var chats
-      let messages = state.messages.map(\.message)
-      if let lastMessage = messages.last, lastMessage.role == .user {
-        _ = $chats[id: state.id].withLock {
-          $0?.messages.append(lastMessage)
-        }
-      }
-      return .send(.delegate(.chatUpdated(id: state.id)))
     }
   }
 }

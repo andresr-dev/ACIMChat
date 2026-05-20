@@ -11,9 +11,7 @@ import Foundation
 public struct ChatModel: Equatable, Identifiable, Codable, Sendable {
   public let id: UUID
   public var messages: IdentifiedArrayOf<ChatMessage>
-  public var title: String {
-    messages.last?.text ?? "Nueva Conversación"
-  }
+  public var title: String?
   
   public init(id: UUID = UUID(), messages: IdentifiedArrayOf<ChatMessage> = []) {
     self.id = id

@@ -44,19 +44,13 @@ public struct RootFeature {
       switch action {
       case let .path(.element(id: _, action: .chat(.delegate(actionDelegate)))):
         switch actionDelegate {
-        case let .chatUpdated(id: chatID):
+        case let .moveChatToTop(id: chatID):
           moveChatToTop(state: &state, chatID: chatID)
           return .none
         }
         
-      case let .chatList(.navigateTo(chatID: chatID)):
-        guard let chat = state.chatList.chats[id: chatID] else {
-          return .none
-        }
-        let messages = chat.messages.map(MessageFeature.State.init)
-        state.path = StackState(
-          [.chat(ChatFeature.State(id: chat.id, messages: messages))]
-        )
+      case let .chatList(.delegate(.navigateTo(chat: chat))):
+        state.path = StackState([.chat(ChatFeature.State(chat: chat))])
         return .none
         
       case .path, .chatList:

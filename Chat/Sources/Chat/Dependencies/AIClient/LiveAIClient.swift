@@ -14,7 +14,7 @@ extension AIClient: DependencyKey {
       AsyncThrowingStream { continuation in
         Task {
           do {
-            let url = URL(string: "https://us-central1-acim-chat.cloudfunctions.net/askACIM")
+            let url = URL(string: "\(baseURL)/askACIM")
             guard let url else {
               continuation.finish(throwing: Error.invalidURL)
               return
@@ -29,11 +29,11 @@ extension AIClient: DependencyKey {
             }
             let body = Request(
               question: question,
-              language: "es",
+              language: DeviceInfo.language,
               history: history.map(RequestChatMessage.init)
             )
-            request.httpBody = try JSONEncoder().encode(body)
-            let (stream, response) = try await URLSession.shared.bytes(for: request)
+            request.httpBody = try encoder.encode(body)
+            let (stream, response) = try await session.bytes(for: request)
             
             guard let httpResponse = response as? HTTPURLResponse else {
               continuation.finish(throwing: Error.invalidResponse)
@@ -63,6 +63,34 @@ extension AIClient: DependencyKey {
           }
         }
       }
+    }, generateTitle: { question, answer in
+      guard let url = URL(string: "\(baseURL)/generateTitle") else {
+        throw Error.invalidURL
+      }
+      var request = URLRequest(url: url)
+      request.httpMethod = "POST"
+      request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+      request.httpBody = try encoder.encode([
+        "firstQuestion": question,
+        "firstAnswer": answer,
+        "language": DeviceInfo.language
+      ])
+      
+      let (data, response) = try await session.data(for: request)
+      
+      guard let http = response as? HTTPURLResponse else {
+        throw Error.invalidResponse
+      }
+      guard (200...299).contains(http.statusCode) else {
+        throw Error.serverError(http.statusCode)
+      }
+      guard
+        let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+        let title = json["title"] as? String
+      else {
+        throw Error.decodingError(NSError(domain: "Missing title field", code: 0))
+      }
+      return title
     }
   )
   

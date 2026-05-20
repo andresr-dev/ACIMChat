@@ -18,8 +18,8 @@ struct RootFeatureTests {
     @Shared(.chats) var chats = [chat]
     let store = getStore()
         
-    await store.send(.chatList(.navigateTo(chatID: chat.id))) {
-      $0.path[id: 0] = .chat(ChatFeature.State(id: chat.id))
+    await store.send(.chatList(.delegate(.navigateTo(chat: $chats[0])))) {
+      $0.path[id: 0] = .chat(ChatFeature.State(chat: $chats[0]))
     }
     await store.send(.path(.popFrom(id: 0))) {
       $0.path = StackState([])
@@ -28,62 +28,54 @@ struct RootFeatureTests {
   
   @Test func messagesPersistAfterNavigatingBack() async throws {
     var chat = ChatModel(id: UUID(0))
+    let userMessage = ChatMessage.mockUserMessage
+    let aiMessage = ChatMessage.mockAIMessage
     @Shared(.chats) var chats = [chat]
     let store = getStore()
         
-    await store.send(.chatList(.navigateTo(chatID: chat.id))) {
-      $0.path[id: 0] = .chat(ChatFeature.State(id: chat.id))
+    await store.send(.chatList(.delegate(.navigateTo(chat: $chats[0])))) {
+      $0.path[id: 0] = .chat(ChatFeature.State(chat: $chats[0]))
     }
     
     await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello")))))) {
       $0.path[id: 0, case: \.chat]?.text = "Hello"
     }
      
-    chat.messages = [.mockUserMessage]
+    chat.messages = [userMessage]
     await store.send(.path(.element(id: 0, action: .chat(.sendMessageButtonPressed)))) {
-      $0.path[id: 0, case: \.chat]?.messages = [MessageFeature.State(message: .mockUserMessage)]
+      $0.path[id: 0, case: \.chat]?.messages = [MessageFeature.State(message: userMessage)]
       $0.chatList.$chats.withLock { $0 = [chat] }
       $0.path[id: 0, case: \.chat]?.isTyping = true
       $0.path[id: 0, case: \.chat]?.text = ""
-      $0.path[id: 0, case: \.chat]?.messages = [MessageFeature.State(message: .mockUserMessage)]
       $0.chatList.$chats.withLock { $0 = [chat] }
     }
     
-    chat.messages.append(.mockAIMessage)
-    await store.receive(\.path[id: 0].chat.delegate.chatUpdated) {
-      $0.path[id: 0, case: \.chat]?.messages = [
-        MessageFeature.State(message: .mockUserMessage)
-      ]
-      $0.chatList.$chats.withLock { $0 = [chat] }
-    }
+    chat.messages.append(aiMessage)
     await store.receive(\.path[id: 0].chat.scrollToLastUserMessage) {
-      $0.path[id: 0, case: \.chat]?.scrollPosition = .user(ChatMessage.mockUserMessage.id.uuidString)
+      $0.chatList.$chats.withLock { $0 = [chat] }
+      $0.path[id: 0, case: \.chat]?.messages = [
+        MessageFeature.State(message: userMessage)
+      ]
+      $0.path[id: 0, case: \.chat]?.scrollPosition = .user(userMessage.id.uuidString)
     }
+    await store.receive(\.path[id: 0].chat.delegate.moveChatToTop)
     await store.receive(\.path[id: 0].chat.aiResponse.success) {
       $0.path[id: 0, case: \.chat]?.isTyping = false
-      $0.chatList.$chats.withLock { $0 = [chat] }
-      $0.path[id: 0, case: \.chat]?.aiResponseInProgressID = chat.messages.last?.id
       $0.path[id: 0, case: \.chat]?.messages = [
-        MessageFeature.State(message: .mockUserMessage),
-        MessageFeature.State(message: .mockAIMessage)
+        MessageFeature.State(message: userMessage),
+        MessageFeature.State(message: aiMessage)
       ]
+      $0.path[id: 0, case: \.chat]?.aiResponseInProgressID = chat.messages.last?.id
     }
-    await store.receive(\.path[id: 0].chat.delegate.chatUpdated)
     await store.receive(\.path[id: 0].chat.aiResponseFinished) {
       $0.path[id: 0, case: \.chat]?.aiResponseInProgressID = nil
     }
     await store.send(.path(.popFrom(id: 0))) {
       $0.path = StackState([])
     }
-    await store.send(.chatList(.navigateTo(chatID: chat.id))) {
+    await store.send(.chatList(.delegate(.navigateTo(chat: $chats[0])))) {
       $0.path[id: 1] = .chat(
-        ChatFeature.State(
-          id: chat.id,
-          messages: [
-            MessageFeature.State(message: .mockUserMessage),
-            MessageFeature.State(message: .mockAIMessage)
-          ]
-        )
+        ChatFeature.State(chat: $chats[0])
       )
     }
   }
@@ -94,8 +86,8 @@ struct RootFeatureTests {
     let store = getStore(aiClient: .mock(.cancellation))
     store.exhaustivity = .off
     
-    await store.send(.chatList(.navigateTo(chatID: chat.id))) {
-      $0.path[id: 0] = .chat(ChatFeature.State(id: chat.id))
+    await store.send(.chatList(.delegate(.navigateTo(chat: $chats[0])))) {
+      $0.path[id: 0] = .chat(ChatFeature.State(chat: $chats[0]))
     }
     await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello")))))) {
       $0.path[id: 0, case: \.chat]?.text = "Hello"
@@ -122,8 +114,8 @@ struct RootFeatureTests {
     let store = getStore(aiClient: .mock(.urlCancellation))
     store.exhaustivity = .off
     
-    await store.send(.chatList(.navigateTo(chatID: chat.id))) {
-      $0.path[id: 0] = .chat(ChatFeature.State(id: chat.id))
+    await store.send(.chatList(.delegate(.navigateTo(chat: $chats[0])))) {
+      $0.path[id: 0] = .chat(ChatFeature.State(chat: $chats[0]))
     }
     await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello")))))) {
       $0.path[id: 0, case: \.chat]?.text = "Hello"
@@ -145,20 +137,20 @@ struct RootFeatureTests {
   
   @Test func updatedChatMovesToTop() async throws {
     let chat1 = ChatModel(id: UUID(0))
-    var chat2 = ChatModel(id: UUID(1))
+    let chat2 = ChatModel(id: UUID(1))
     @Shared(.chats) var chats = [chat1, chat2]
     
     let store = getStore()
     store.exhaustivity = .off
     
-    await store.send(.chatList(.navigateTo(chatID: chat2.id)))
+    await store.send(.chatList(.delegate(.navigateTo(chat: $chats[1]))))
     await store.send(.path(.element(id: 0, action: .chat(.binding(.set(\.text, "Hello"))))))
     await store.send(.path(.element(id: 0, action: .chat(.sendMessageButtonPressed))))
     
-    chat2.messages = [.mockUserMessage, .mockAIMessage]
-    await store.receive(\.path[id: 0].chat.delegate.chatUpdated) {
-      $0.chatList.$chats.withLock { $0 = [chat2, chat1] }
-    }
+    await store.receive(\.path[id: 0].chat.delegate.moveChatToTop)
+    await store.skipReceivedActions()
+    
+    #expect(chats.elements.map(\.id) == [chat2.id, chat1.id])
   }
 }
 

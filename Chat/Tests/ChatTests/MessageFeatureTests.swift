@@ -23,7 +23,7 @@ struct MessageFeatureTests {
     await store.send(.speakButtonPressed) {
       $0.isSpeaking = true
     }
-    await store.receive(\.delegate.didStartSpeaking)
+    await store.receive(\.delegate.stopOtherSpeakers)
     await store.receive(\.didStopSpeaking) {
       $0.isSpeaking = false
     }

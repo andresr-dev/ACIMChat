@@ -12,8 +12,8 @@ extension SpeechClient: DependencyKey {
   static var liveValue: Self {
     let synthesizer = SpeechSynthesizer()
 
-    return Self { text, language in
-      try await synthesizer.speak(text: text, language: language)
+    return Self { text in
+      try await synthesizer.speak(text: text)
     } stop: {
       await synthesizer.stop()
     }
@@ -25,7 +25,7 @@ private actor SpeechSynthesizer {
   private var engine: AVAudioEngine?
   private var playerNode: AVAudioPlayerNode?
 
-  func speak(text: String, language: String) async throws {
+  func speak(text: String) async throws {
     stop()
 
     #if os(iOS)
@@ -35,7 +35,7 @@ private actor SpeechSynthesizer {
     #endif
 
     let utterance = AVSpeechUtterance(string: text)
-    utterance.voice = AVSpeechSynthesisVoice(language: language)
+    utterance.voice = AVSpeechSynthesisVoice(language: DeviceInfo.language)
     utterance.rate = 0.5
     utterance.pitchMultiplier = 1.0
     utterance.volume = 1.0
