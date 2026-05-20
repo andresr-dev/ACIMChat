@@ -23,13 +23,9 @@ Built with SwiftUI and The Composable Architecture (TCA) for a modern, scalable,
 * The Composable Architecture (TCA)
 * OpenAI API (or your AI provider if different)
 
-⸻
-
 📱 Demo
 
 https://github.com/user-attachments/assets/0cca8b05-22d8-4f67-8994-1e34001ec950
-
-⸻
 
 🧱 Architecture
 
@@ -43,3 +39,32 @@ Main benefits:
 * Modular feature organization
 * Scalable navigation and side effects handling
 
+⸻
+
+💾 Persistence
+
+ACIM Chat uses the native FileManager system for local persistence.
+All conversations are stored locally on the device, allowing chats to remain available between app launches without requiring a database setup.
+
+Benefits of this approach:
+
+* Lightweight and fast
+* Offline-friendly
+* Simple and maintainable storage layer
+* Seamless chat restoration
+
+⸻
+
+☁️ Xcode Cloud CI/CD
+
+The project is configured with Xcode Cloud for continuous integration and deployment.
+
+Automated Workflow
+
+Every merge into the main branch automatically:
+
+1. Runs the test suite
+2. Builds the application
+3. Generates a new TestFlight build
+
+This setup helps ensure code quality, faster delivery, and a streamlined release process.
